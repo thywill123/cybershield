@@ -7,7 +7,7 @@ import { auth, db } from '../firebase'
 
 const isMobile = () => window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
-// Desktop canvas animation
+// Desktop canvas animation — unchanged
 function CyberCanvas() {
   const canvasRef = useRef(null)
   useEffect(() => {
@@ -44,87 +44,6 @@ function CyberCanvas() {
   return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full" style={{ zIndex: 0 }} />
 }
 
-// Mobile CSS-only background — zero JS animation, runs on GPU
-function MobileBackground() {
-  return (
-    <>
-      <style>{`
-        @keyframes floatUp {
-          0% { transform: translateY(100vh) scale(0); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 0.6; }
-          100% { transform: translateY(-10vh) scale(1); opacity: 0; }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.2); }
-        }
-        @keyframes rotateSlow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        .particle {
-          position: fixed;
-          border-radius: 50%;
-          background: rgba(100, 180, 255, 0.6);
-          animation: floatUp linear infinite;
-          pointer-events: none;
-          will-change: transform, opacity;
-        }
-        .glow-orb {
-          position: fixed;
-          border-radius: 50%;
-          pointer-events: none;
-          animation: pulse ease-in-out infinite;
-          will-change: opacity, transform;
-        }
-        .ring {
-          position: fixed;
-          border-radius: 50%;
-          border: 1px solid rgba(80, 140, 255, 0.15);
-          pointer-events: none;
-          animation: rotateSlow linear infinite;
-          will-change: transform;
-        }
-      `}</style>
-
-      {/* Deep dark background */}
-      <div className="fixed inset-0" style={{ background: 'radial-gradient(ellipse at 30% 20%, #081830 0%, #030a1a 50%, #010610 100%)', zIndex: 0 }} />
-
-      {/* Corner glows — CSS only */}
-      <div className="glow-orb" style={{ width: 300, height: 300, top: -100, left: -100, background: 'radial-gradient(circle, rgba(30,80,220,0.2) 0%, transparent 70%)', animationDuration: '4s', zIndex: 0 }} />
-      <div className="glow-orb" style={{ width: 400, height: 400, bottom: -150, right: -150, background: 'radial-gradient(circle, rgba(80,30,200,0.18) 0%, transparent 70%)', animationDuration: '5s', animationDelay: '1s', zIndex: 0 }} />
-      <div className="glow-orb" style={{ width: 250, height: 250, top: '40%', right: -80, background: 'radial-gradient(circle, rgba(40,100,255,0.12) 0%, transparent 70%)', animationDuration: '6s', animationDelay: '2s', zIndex: 0 }} />
-
-      {/* Rotating rings */}
-      <div className="ring" style={{ width: 500, height: 500, top: '50%', left: '50%', marginTop: -250, marginLeft: -250, animationDuration: '30s', zIndex: 0 }} />
-      <div className="ring" style={{ width: 350, height: 350, top: '50%', left: '50%', marginTop: -175, marginLeft: -175, animationDuration: '20s', animationDirection: 'reverse', zIndex: 0 }} />
-
-      {/* Floating particles — CSS only, no JS */}
-      {[
-        { left: '10%', size: 4, duration: '8s', delay: '0s', color: 'rgba(100,180,255,0.7)' },
-        { left: '20%', size: 3, duration: '12s', delay: '2s', color: 'rgba(150,100,255,0.6)' },
-        { left: '35%', size: 5, duration: '9s', delay: '1s', color: 'rgba(80,200,255,0.5)' },
-        { left: '50%', size: 3, duration: '14s', delay: '3s', color: 'rgba(100,150,255,0.7)' },
-        { left: '65%', size: 4, duration: '10s', delay: '0.5s', color: 'rgba(180,80,255,0.5)' },
-        { left: '75%', size: 3, duration: '11s', delay: '4s', color: 'rgba(100,220,255,0.6)' },
-        { left: '85%', size: 5, duration: '13s', delay: '1.5s', color: 'rgba(80,160,255,0.4)' },
-        { left: '90%', size: 3, duration: '7s', delay: '2.5s', color: 'rgba(150,80,255,0.5)' },
-        { left: '5%', size: 4, duration: '15s', delay: '3.5s', color: 'rgba(100,200,255,0.4)' },
-        { left: '45%', size: 3, duration: '16s', delay: '0.8s', color: 'rgba(120,80,255,0.6)' },
-        { left: '55%', size: 4, duration: '9s', delay: '5s', color: 'rgba(80,180,255,0.5)' },
-        { left: '30%', size: 3, duration: '11s', delay: '6s', color: 'rgba(200,80,255,0.4)' },
-      ].map((p, i) => (
-        <div key={i} className="particle" style={{ left: p.left, bottom: '-20px', width: p.size, height: p.size, background: p.color, animationDuration: p.duration, animationDelay: p.delay, zIndex: 0 }} />
-      ))}
-    </>
-  )
-}
-
 // Password validation
 const validatePassword = (pwd) => ({
   minLength: pwd.length >= 8,
@@ -151,9 +70,7 @@ export default function Login() {
   const [mobile, setMobile] = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    setMobile(isMobile())
-  }, [])
+  useEffect(() => { setMobile(isMobile()) }, [])
 
   const pwdValidation = validatePassword(password)
 
@@ -206,9 +123,14 @@ export default function Login() {
   }
 
   const inputClass = "bg-transparent text-white w-full outline-none text-sm placeholder-gray-500"
-  const inputWrap = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(80,140,255,0.35)' }
+  const inputWrap = { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(80,140,255,0.35)' }
   const btnStyle = { background: loading ? 'rgba(80,100,200,0.5)' : 'linear-gradient(135deg,#1a3fc4,#2d6fff,#7c3aed)', boxShadow: '0 0 30px rgba(80,100,255,0.5)' }
-  const cardStyle = { background: 'rgba(6,15,40,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(80,140,255,0.2)', boxShadow: '0 0 60px rgba(40,80,255,0.15),0 20px 60px rgba(0,0,0,0.6)' }
+
+  // Mobile card — NO blur, solid background for performance
+  // Desktop card — glassmorphism blur
+  const cardStyle = mobile
+    ? { background: '#0a1628', border: '1px solid rgba(80,140,255,0.25)', boxShadow: '0 4px 30px rgba(0,0,0,0.8)' }
+    : { background: 'rgba(6,15,40,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(80,140,255,0.2)', boxShadow: '0 0 60px rgba(40,80,255,0.15),0 20px 60px rgba(0,0,0,0.6)' }
 
   const RuleItem = ({ passed, text }) => (
     <div className="flex items-center gap-2">
@@ -218,16 +140,29 @@ export default function Login() {
   )
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
+      style={mobile ? { background: 'linear-gradient(135deg, #040d20 0%, #081830 50%, #030a18 100%)' } : {}}>
 
-      {/* Desktop = canvas animation, Mobile = CSS animation */}
-      {mobile ? <MobileBackground /> : <CyberCanvas />}
+      {/* Desktop only — canvas animation */}
+      {!mobile && <CyberCanvas />}
+
+      {/* Mobile only — simple static gradient, zero animation */}
+      {mobile && (
+        <div className="fixed inset-0" style={{ zIndex: 0 }}>
+          {/* Static background */}
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 20% 20%, #0d2040 0%, #040d1a 40%, #020810 100%)' }} />
+          {/* Static corner glows — no animation */}
+          <div className="absolute top-0 left-0" style={{ width: 300, height: 300, background: 'radial-gradient(circle, rgba(30,80,200,0.15) 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 right-0" style={{ width: 350, height: 350, background: 'radial-gradient(circle, rgba(70,20,180,0.12) 0%, transparent 70%)' }} />
+          <div className="absolute top-1/2 right-0" style={{ width: 200, height: 200, background: 'radial-gradient(circle, rgba(40,80,200,0.08) 0%, transparent 70%)' }} />
+        </div>
+      )}
 
       <div className="w-full max-w-md relative" style={{ zIndex: 10 }}>
         <div className="flex flex-col items-center mb-8">
           <div className="relative mb-4">
-            <div className="absolute inset-0 rounded-full blur-2xl opacity-70" style={{ background: 'radial-gradient(circle,rgba(80,120,255,0.9) 0%,rgba(120,40,220,0.6) 50%,transparent 80%)' }} />
-            <img src="/logo.png" alt="CyberShield Logo" className="w-24 h-24 relative drop-shadow-2xl" />
+            <div className="absolute inset-0 rounded-full opacity-70" style={{ background: 'radial-gradient(circle,rgba(80,120,255,0.6) 0%,transparent 70%)', filter: mobile ? 'none' : 'blur(20px)' }} />
+            <img src="/logo.png" alt="CyberShield Logo" className="w-24 h-24 relative" />
           </div>
           <h1 className="text-4xl font-bold tracking-wide" style={{ background: 'linear-gradient(135deg,#60a5fa,#a78bfa,#38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CyberShield</h1>
           <p className="text-blue-400 mt-1 text-xs tracking-widest uppercase opacity-80">⬡ Cybersecurity Awareness Platform ⬡</p>
@@ -245,10 +180,10 @@ export default function Login() {
                   <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
                 <div><label className="text-blue-300 text-sm mb-1 block">Password</label>
                   <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className={inputClass} /></div></div>
-                <div className="text-right"><button type="button" onClick={() => { setMode('forgot'); setError('') }} className="text-blue-400 text-sm hover:text-purple-300 transition">Forgot password?</button></div>
-                <button type="submit" disabled={loading} className="w-full text-white font-semibold py-3 rounded-lg transition hover:opacity-90" style={btnStyle}>{loading ? 'Signing in...' : 'Sign In →'}</button>
+                <div className="text-right"><button type="button" onClick={() => { setMode('forgot'); setError('') }} className="text-blue-400 text-sm">Forgot password?</button></div>
+                <button type="submit" disabled={loading} className="w-full text-white font-semibold py-3 rounded-lg" style={btnStyle}>{loading ? 'Signing in...' : 'Sign In →'}</button>
               </form>
-              <p className="text-center text-gray-500 text-sm mt-6">Don't have an account?{' '}<button onClick={() => { setMode('signup'); setError('') }} className="text-blue-400 hover:text-purple-300">Sign up</button></p>
+              <p className="text-center text-gray-500 text-sm mt-6">Don't have an account?{' '}<button onClick={() => { setMode('signup'); setError('') }} className="text-blue-400">Sign up</button></p>
             </>
           )}
 
@@ -265,7 +200,7 @@ export default function Login() {
                 <div><label className="text-blue-300 text-sm mb-1 block">Password</label>
                   <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="password" placeholder="Create a strong password" value={password} onChange={e => { setPassword(e.target.value); setShowPasswordRules(true) }} onFocus={() => setShowPasswordRules(true)} required className={inputClass} /></div>
                   {showPasswordRules && (
-                    <div className="mt-2 p-3 rounded-lg space-y-1.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(80,140,255,0.15)' }}>
+                    <div className="mt-2 p-3 rounded-lg space-y-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(80,140,255,0.15)' }}>
                       <RuleItem passed={pwdValidation.minLength} text="At least 8 characters" />
                       <RuleItem passed={pwdValidation.hasUpper} text="At least one uppercase letter (A-Z)" />
                       <RuleItem passed={pwdValidation.hasNumber} text="At least one number (0-9)" />
@@ -273,9 +208,9 @@ export default function Login() {
                     </div>
                   )}
                 </div>
-                <button type="submit" disabled={loading} className="w-full text-white font-semibold py-3 rounded-lg transition hover:opacity-90" style={btnStyle}>{loading ? 'Creating account...' : 'Create Account →'}</button>
+                <button type="submit" disabled={loading} className="w-full text-white font-semibold py-3 rounded-lg" style={btnStyle}>{loading ? 'Creating account...' : 'Create Account →'}</button>
               </form>
-              <p className="text-center text-gray-500 text-sm mt-6">Already have an account?{' '}<button onClick={() => { setMode('login'); setError('') }} className="text-blue-400 hover:text-purple-300">Sign in</button></p>
+              <p className="text-center text-gray-500 text-sm mt-6">Already have an account?{' '}<button onClick={() => { setMode('login'); setError('') }} className="text-blue-400">Sign in</button></p>
             </>
           )}
 
@@ -288,18 +223,18 @@ export default function Login() {
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div><label className="text-blue-300 text-sm mb-1 block">Email</label>
                       <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
-                    <button type="submit" disabled={loading} className="w-full text-white font-semibold py-3 rounded-lg transition hover:opacity-90" style={btnStyle}>{loading ? 'Sending...' : 'Send Reset Link →'}</button>
+                    <button type="submit" disabled={loading} className="w-full text-white font-semibold py-3 rounded-lg" style={btnStyle}>{loading ? 'Sending...' : 'Send Reset Link →'}</button>
                   </form>
                 </>
               ) : (
                 <div className="text-center py-6">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)', boxShadow: '0 0 30px rgba(34,197,94,0.5)' }}><Mail className="text-white w-6 h-6" /></div>
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)' }}><Mail className="text-white w-6 h-6" /></div>
                   <p className="text-white font-medium text-lg">Check your email!</p>
                   <p className="text-gray-400 text-sm mt-2">A reset link has been sent to<br /><span className="text-blue-400">{email}</span></p>
                   <p className="text-gray-500 text-xs mt-3">Check your spam folder if you do not see it</p>
                 </div>
               )}
-              <p className="text-center text-gray-500 text-sm mt-6"><button onClick={() => { setMode('login'); setSubmitted(false); setError('') }} className="text-blue-400 hover:text-purple-300">← Back to Sign in</button></p>
+              <p className="text-center text-gray-500 text-sm mt-6"><button onClick={() => { setMode('login'); setSubmitted(false); setError('') }} className="text-blue-400">← Back to Sign in</button></p>
             </>
           )}
         </div>
