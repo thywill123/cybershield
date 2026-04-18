@@ -5,225 +5,124 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswor
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 
-// Detect mobile device
 const isMobile = () => window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
+// Desktop canvas animation
 function CyberCanvas() {
   const canvasRef = useRef(null)
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     let animationId
-    const mobile = isMobile()
-
-    const resize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-    }
-    resize()
-    window.addEventListener('resize', resize)
-
-    // Reduce everything on mobile
-    const nodeCount = mobile ? 15 : 60
-    const signalCount = mobile ? 8 : 40
-    const particleCount = mobile ? 30 : 150
-    const rippleInterval = mobile ? 2000 : 800
-    const streamCount = mobile ? 3 : 8
-
-    const nodes = Array.from({ length: nodeCount }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      pulse: Math.random() * Math.PI * 2,
-      size: Math.random() * 3 + 2,
-    }))
-
-    const signals = Array.from({ length: signalCount }, () => ({
-      progress: Math.random(),
-      speed: 0.003 + Math.random() * 0.006,
-      nodeA: Math.floor(Math.random() * nodes.length),
-      nodeB: Math.floor(Math.random() * nodes.length),
-      color: Math.random() > 0.5 ? '100,200,255' : '180,100,255',
-      size: Math.random() * 4 + 3,
-    }))
-
-    const particles = Array.from({ length: particleCount }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      r: Math.random() * 2.5 + 0.5,
-      dx: (Math.random() - 0.5) * 0.6,
-      dy: (Math.random() - 0.5) * 0.6,
-      alpha: Math.random() * 0.6 + 0.2,
-      pulse: Math.random() * Math.PI * 2,
-      color: Math.random() > 0.7 ? '200,100,255' : Math.random() > 0.5 ? '100,220,255' : '50,150,255',
-    }))
-
-    const ripples = []
-    const ri = setInterval(() => {
-      ripples.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        r: 0, alpha: 0.6,
-        color: Math.random() > 0.5 ? '80,160,255' : '160,80,255',
-      })
-    }, rippleInterval)
-
-    const streams = Array.from({ length: streamCount }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      angle: Math.random() * Math.PI * 2,
-      length: 60 + Math.random() * 100,
-      speed: 2 + Math.random() * 3,
-      alpha: Math.random() * 0.7 + 0.3,
-      color: Math.random() > 0.5 ? '100,200,255' : '200,100,255',
-    }))
-
-    // Skip hex grid on mobile — too heavy
-    const hexSize = 40
-    const hexGrid = []
-    if (!mobile) {
-      for (let hx = 0; hx < window.innerWidth + hexSize * 2; hx += hexSize * 1.75) {
-        for (let hy = 0; hy < window.innerHeight + hexSize * 2; hy += hexSize * 1.5) {
-          hexGrid.push({
-            x: hx + (Math.floor(hy / (hexSize * 1.5)) % 2 === 0 ? 0 : hexSize * 0.875),
-            y: hy, pulse: Math.random() * Math.PI * 2, alpha: Math.random() * 0.06 + 0.01,
-          })
-        }
-      }
-    }
-
-    const drawHex = (x, y, s) => {
-      ctx.beginPath()
-      for (let i = 0; i < 6; i++) {
-        const a = (Math.PI / 3) * i - Math.PI / 6
-        i === 0 ? ctx.moveTo(x + s * Math.cos(a), y + s * Math.sin(a)) : ctx.lineTo(x + s * Math.cos(a), y + s * Math.sin(a))
-      }
-      ctx.closePath()
-    }
-
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
+    resize(); window.addEventListener('resize', resize)
+    const nodes = Array.from({ length: 60 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, pulse: Math.random() * Math.PI * 2, size: Math.random() * 3 + 2 }))
+    const signals = Array.from({ length: 40 }, () => ({ progress: Math.random(), speed: 0.003 + Math.random() * 0.006, nodeA: Math.floor(Math.random() * nodes.length), nodeB: Math.floor(Math.random() * nodes.length), color: Math.random() > 0.5 ? '100,200,255' : '180,100,255', size: Math.random() * 4 + 3 }))
+    const particles = Array.from({ length: 150 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: Math.random() * 2.5 + 0.5, dx: (Math.random() - 0.5) * 0.6, dy: (Math.random() - 0.5) * 0.6, alpha: Math.random() * 0.6 + 0.2, pulse: Math.random() * Math.PI * 2, color: Math.random() > 0.7 ? '200,100,255' : Math.random() > 0.5 ? '100,220,255' : '50,150,255' }))
+    const ripples = []; const ri = setInterval(() => ripples.push({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: 0, alpha: 0.6, color: Math.random() > 0.5 ? '80,160,255' : '160,80,255' }), 800)
+    const streams = Array.from({ length: 8 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, angle: Math.random() * Math.PI * 2, length: 60 + Math.random() * 100, speed: 2 + Math.random() * 3, alpha: Math.random() * 0.7 + 0.3, color: Math.random() > 0.5 ? '100,200,255' : '200,100,255' }))
+    const hexSize = 40; const hexGrid = []
+    for (let hx = 0; hx < window.innerWidth + hexSize * 2; hx += hexSize * 1.75) for (let hy = 0; hy < window.innerHeight + hexSize * 2; hy += hexSize * 1.5) hexGrid.push({ x: hx + (Math.floor(hy / (hexSize * 1.5)) % 2 === 0 ? 0 : hexSize * 0.875), y: hy, pulse: Math.random() * Math.PI * 2, alpha: Math.random() * 0.06 + 0.01 })
+    const drawHex = (x, y, s) => { ctx.beginPath(); for (let i = 0; i < 6; i++) { const a = (Math.PI / 3) * i - Math.PI / 6; i === 0 ? ctx.moveTo(x + s * Math.cos(a), y + s * Math.sin(a)) : ctx.lineTo(x + s * Math.cos(a), y + s * Math.sin(a)) } ctx.closePath() }
     let frame = 0
     const draw = () => {
-      frame++
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      const bg = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width)
-      bg.addColorStop(0, '#040d20'); bg.addColorStop(1, '#010610')
-      ctx.fillStyle = bg; ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      // Hex grid — desktop only
-      if (!mobile) {
-        hexGrid.forEach(h => {
-          h.pulse += 0.008
-          ctx.strokeStyle = `rgba(30,100,220,${h.alpha + 0.03 * Math.sin(h.pulse)})`
-          ctx.lineWidth = 0.5; drawHex(h.x, h.y, hexSize * 0.9); ctx.stroke()
-        })
-      }
-
-      nodes.forEach(n => {
-        n.x += n.vx; n.y += n.vy; n.pulse += 0.02
-        if (n.x < 0 || n.x > canvas.width) n.vx *= -1
-        if (n.y < 0 || n.y > canvas.height) n.vy *= -1
-      })
-
-      // Circuit lines — skip on mobile for performance
-      if (!mobile) {
-        nodes.forEach((a, i) => nodes.forEach((b, j) => {
-          if (j <= i) return
-          const d = Math.hypot(a.x - b.x, a.y - b.y)
-          if (d < 200) {
-            const op = (1 - d / 200) * 0.25
-            const gr = ctx.createLinearGradient(a.x, a.y, b.x, b.y)
-            gr.addColorStop(0, `rgba(30,120,255,${op})`); gr.addColorStop(1, `rgba(30,120,255,${op})`)
-            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = gr; ctx.lineWidth = 0.8; ctx.stroke()
-          }
-        }))
-      } else {
-        // Simpler lines on mobile
-        nodes.forEach((a, i) => nodes.forEach((b, j) => {
-          if (j <= i) return
-          const d = Math.hypot(a.x - b.x, a.y - b.y)
-          if (d < 150) {
-            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(30,120,255,${(1 - d / 150) * 0.15})`
-            ctx.lineWidth = 0.5; ctx.stroke()
-          }
-        }))
-      }
-
-      signals.forEach(sig => {
-        sig.progress += sig.speed
-        if (sig.progress >= 1) {
-          sig.progress = 0; sig.nodeA = sig.nodeB
-          sig.nodeB = Math.floor(Math.random() * nodes.length)
-          sig.color = Math.random() > 0.5 ? '100,200,255' : '180,80,255'
-        }
-        const a = nodes[sig.nodeA], b = nodes[sig.nodeB]
-        if (Math.hypot(a.x - b.x, a.y - b.y) < (mobile ? 150 : 200)) {
-          const sx = a.x + (b.x - a.x) * sig.progress
-          const sy = a.y + (b.y - a.y) * sig.progress
-          const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, sig.size * 3)
-          grd.addColorStop(0, `rgba(${sig.color},1)`); grd.addColorStop(1, `rgba(${sig.color},0)`)
-          ctx.beginPath(); ctx.arc(sx, sy, sig.size * 3, 0, Math.PI * 2); ctx.fillStyle = grd; ctx.fill()
-          ctx.beginPath(); ctx.arc(sx, sy, sig.size * 0.8, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fill()
-        }
-      })
-
-      nodes.forEach(n => {
-        const p = 0.4 + 0.3 * Math.sin(n.pulse)
-        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 20)
-        g.addColorStop(0, `rgba(60,140,255,${p})`); g.addColorStop(1, 'rgba(60,140,255,0)')
-        ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill()
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(150,210,255,${0.8 + 0.2 * Math.sin(n.pulse)})`; ctx.fill()
-      })
-
-      particles.forEach(p => {
-        p.x += p.dx; p.y += p.dy; p.pulse += 0.04
-        if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0
-        if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${p.color},${p.alpha * (0.5 + 0.5 * Math.sin(p.pulse))})`; ctx.fill()
-      })
-
-      for (let i = ripples.length - 1; i >= 0; i--) {
-        const rp = ripples[i]; rp.r += 1.5; rp.alpha -= 0.008
-        if (rp.alpha <= 0) { ripples.splice(i, 1); continue }
-        ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(${rp.color},${rp.alpha})`; ctx.lineWidth = 1.5; ctx.stroke()
-      }
-
-      streams.forEach(s => {
-        s.x += Math.cos(s.angle) * s.speed; s.y += Math.sin(s.angle) * s.speed
-        if (s.x < -200 || s.x > canvas.width + 200 || s.y < -200 || s.y > canvas.height + 200) {
-          s.x = Math.random() * canvas.width; s.y = Math.random() * canvas.height
-          s.angle = Math.random() * Math.PI * 2
-        }
-        const ex = s.x - Math.cos(s.angle) * s.length, ey = s.y - Math.sin(s.angle) * s.length
-        const gr = ctx.createLinearGradient(ex, ey, s.x, s.y)
-        gr.addColorStop(0, `rgba(${s.color},0)`); gr.addColorStop(1, `rgba(${s.color},${s.alpha})`)
-        ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(s.x, s.y)
-        ctx.strokeStyle = gr; ctx.lineWidth = 1.5; ctx.stroke()
-      })
-
-      // Center glow — skip on mobile
-      if (!mobile) {
-        const cx = canvas.width / 2, cy = canvas.height / 2
-        const centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 400)
-        centerGlow.addColorStop(0, `rgba(20,60,180,${0.15 + 0.05 * Math.sin(frame * 0.015)})`)
-        centerGlow.addColorStop(1, 'rgba(0,0,0,0)')
-        ctx.fillStyle = centerGlow; ctx.fillRect(0, 0, canvas.width, canvas.height)
-      }
-
+      frame++; ctx.clearRect(0, 0, canvas.width, canvas.height)
+      const bg = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width); bg.addColorStop(0, '#040d20'); bg.addColorStop(1, '#010610'); ctx.fillStyle = bg; ctx.fillRect(0, 0, canvas.width, canvas.height)
+      hexGrid.forEach(h => { h.pulse += 0.008; ctx.strokeStyle = `rgba(30,100,220,${h.alpha + 0.03 * Math.sin(h.pulse)})`; ctx.lineWidth = 0.5; drawHex(h.x, h.y, hexSize * 0.9); ctx.stroke() })
+      nodes.forEach(n => { n.x += n.vx; n.y += n.vy; n.pulse += 0.02; if (n.x < 0 || n.x > canvas.width) n.vx *= -1; if (n.y < 0 || n.y > canvas.height) n.vy *= -1 })
+      nodes.forEach((a, i) => nodes.forEach((b, j) => { if (j <= i) return; const d = Math.hypot(a.x - b.x, a.y - b.y); if (d < 200) { const op = (1 - d / 200) * 0.25; const gr = ctx.createLinearGradient(a.x, a.y, b.x, b.y); gr.addColorStop(0, `rgba(30,120,255,${op})`); gr.addColorStop(1, `rgba(30,120,255,${op})`); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = gr; ctx.lineWidth = 0.8; ctx.stroke() } }))
+      signals.forEach(sig => { sig.progress += sig.speed; if (sig.progress >= 1) { sig.progress = 0; sig.nodeA = sig.nodeB; sig.nodeB = Math.floor(Math.random() * nodes.length); sig.color = Math.random() > 0.5 ? '100,200,255' : '180,80,255' } const a = nodes[sig.nodeA], b = nodes[sig.nodeB]; if (Math.hypot(a.x - b.x, a.y - b.y) < 200) { const sx = a.x + (b.x - a.x) * sig.progress, sy = a.y + (b.y - a.y) * sig.progress; const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, sig.size * 3); grd.addColorStop(0, `rgba(${sig.color},1)`); grd.addColorStop(1, `rgba(${sig.color},0)`); ctx.beginPath(); ctx.arc(sx, sy, sig.size * 3, 0, Math.PI * 2); ctx.fillStyle = grd; ctx.fill(); ctx.beginPath(); ctx.arc(sx, sy, sig.size * 0.8, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fill() } })
+      nodes.forEach(n => { const p = 0.4 + 0.3 * Math.sin(n.pulse); const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, 20); g.addColorStop(0, `rgba(60,140,255,${p})`); g.addColorStop(1, 'rgba(60,140,255,0)'); ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill(); ctx.beginPath(); ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2); ctx.fillStyle = `rgba(150,210,255,${0.8 + 0.2 * Math.sin(n.pulse)})`; ctx.fill() })
+      particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.pulse += 0.04; if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0; if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = `rgba(${p.color},${p.alpha * (0.5 + 0.5 * Math.sin(p.pulse))})`; ctx.fill() })
+      for (let i = ripples.length - 1; i >= 0; i--) { const rp = ripples[i]; rp.r += 1.5; rp.alpha -= 0.008; if (rp.alpha <= 0) { ripples.splice(i, 1); continue } ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2); ctx.strokeStyle = `rgba(${rp.color},${rp.alpha})`; ctx.lineWidth = 1.5; ctx.stroke() }
+      streams.forEach(s => { s.x += Math.cos(s.angle) * s.speed; s.y += Math.sin(s.angle) * s.speed; if (s.x < -200 || s.x > canvas.width + 200 || s.y < -200 || s.y > canvas.height + 200) { s.x = Math.random() * canvas.width; s.y = Math.random() * canvas.height; s.angle = Math.random() * Math.PI * 2 } const ex = s.x - Math.cos(s.angle) * s.length, ey = s.y - Math.sin(s.angle) * s.length; const gr = ctx.createLinearGradient(ex, ey, s.x, s.y); gr.addColorStop(0, `rgba(${s.color},0)`); gr.addColorStop(1, `rgba(${s.color},${s.alpha})`); ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(s.x, s.y); ctx.strokeStyle = gr; ctx.lineWidth = 1.5; ctx.stroke() })
       animationId = requestAnimationFrame(draw)
     }
-
     draw()
     return () => { cancelAnimationFrame(animationId); clearInterval(ri); window.removeEventListener('resize', resize) }
   }, [])
-
   return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full" style={{ zIndex: 0 }} />
+}
+
+// Mobile CSS-only background — zero JS animation, runs on GPU
+function MobileBackground() {
+  return (
+    <>
+      <style>{`
+        @keyframes floatUp {
+          0% { transform: translateY(100vh) scale(0); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 0.6; }
+          100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.2); }
+        }
+        @keyframes rotateSlow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        .particle {
+          position: fixed;
+          border-radius: 50%;
+          background: rgba(100, 180, 255, 0.6);
+          animation: floatUp linear infinite;
+          pointer-events: none;
+          will-change: transform, opacity;
+        }
+        .glow-orb {
+          position: fixed;
+          border-radius: 50%;
+          pointer-events: none;
+          animation: pulse ease-in-out infinite;
+          will-change: opacity, transform;
+        }
+        .ring {
+          position: fixed;
+          border-radius: 50%;
+          border: 1px solid rgba(80, 140, 255, 0.15);
+          pointer-events: none;
+          animation: rotateSlow linear infinite;
+          will-change: transform;
+        }
+      `}</style>
+
+      {/* Deep dark background */}
+      <div className="fixed inset-0" style={{ background: 'radial-gradient(ellipse at 30% 20%, #081830 0%, #030a1a 50%, #010610 100%)', zIndex: 0 }} />
+
+      {/* Corner glows — CSS only */}
+      <div className="glow-orb" style={{ width: 300, height: 300, top: -100, left: -100, background: 'radial-gradient(circle, rgba(30,80,220,0.2) 0%, transparent 70%)', animationDuration: '4s', zIndex: 0 }} />
+      <div className="glow-orb" style={{ width: 400, height: 400, bottom: -150, right: -150, background: 'radial-gradient(circle, rgba(80,30,200,0.18) 0%, transparent 70%)', animationDuration: '5s', animationDelay: '1s', zIndex: 0 }} />
+      <div className="glow-orb" style={{ width: 250, height: 250, top: '40%', right: -80, background: 'radial-gradient(circle, rgba(40,100,255,0.12) 0%, transparent 70%)', animationDuration: '6s', animationDelay: '2s', zIndex: 0 }} />
+
+      {/* Rotating rings */}
+      <div className="ring" style={{ width: 500, height: 500, top: '50%', left: '50%', marginTop: -250, marginLeft: -250, animationDuration: '30s', zIndex: 0 }} />
+      <div className="ring" style={{ width: 350, height: 350, top: '50%', left: '50%', marginTop: -175, marginLeft: -175, animationDuration: '20s', animationDirection: 'reverse', zIndex: 0 }} />
+
+      {/* Floating particles — CSS only, no JS */}
+      {[
+        { left: '10%', size: 4, duration: '8s', delay: '0s', color: 'rgba(100,180,255,0.7)' },
+        { left: '20%', size: 3, duration: '12s', delay: '2s', color: 'rgba(150,100,255,0.6)' },
+        { left: '35%', size: 5, duration: '9s', delay: '1s', color: 'rgba(80,200,255,0.5)' },
+        { left: '50%', size: 3, duration: '14s', delay: '3s', color: 'rgba(100,150,255,0.7)' },
+        { left: '65%', size: 4, duration: '10s', delay: '0.5s', color: 'rgba(180,80,255,0.5)' },
+        { left: '75%', size: 3, duration: '11s', delay: '4s', color: 'rgba(100,220,255,0.6)' },
+        { left: '85%', size: 5, duration: '13s', delay: '1.5s', color: 'rgba(80,160,255,0.4)' },
+        { left: '90%', size: 3, duration: '7s', delay: '2.5s', color: 'rgba(150,80,255,0.5)' },
+        { left: '5%', size: 4, duration: '15s', delay: '3.5s', color: 'rgba(100,200,255,0.4)' },
+        { left: '45%', size: 3, duration: '16s', delay: '0.8s', color: 'rgba(120,80,255,0.6)' },
+        { left: '55%', size: 4, duration: '9s', delay: '5s', color: 'rgba(80,180,255,0.5)' },
+        { left: '30%', size: 3, duration: '11s', delay: '6s', color: 'rgba(200,80,255,0.4)' },
+      ].map((p, i) => (
+        <div key={i} className="particle" style={{ left: p.left, bottom: '-20px', width: p.size, height: p.size, background: p.color, animationDuration: p.duration, animationDelay: p.delay, zIndex: 0 }} />
+      ))}
+    </>
+  )
 }
 
 // Password validation
@@ -249,7 +148,12 @@ export default function Login() {
   const [error, setError] = useState('')
   const [showPasswordRules, setShowPasswordRules] = useState(false)
   const [signupSuccess, setSignupSuccess] = useState(false)
+  const [mobile, setMobile] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    setMobile(isMobile())
+  }, [])
 
   const pwdValidation = validatePassword(password)
 
@@ -275,7 +179,6 @@ export default function Login() {
         setSignupSuccess(true)
         setEmail(''); setPassword(''); setName(''); setInstitution('')
         setTimeout(() => { setSignupSuccess(false); setMode('login') }, 2500)
-
       } else if (mode === 'login') {
         const cred = await signInWithEmailAndPassword(auth, email, password)
         const snap = await getDoc(doc(db, 'users', cred.user.uid))
@@ -286,7 +189,6 @@ export default function Login() {
           if (d.points !== undefined) localStorage.setItem('cybershield_stats', JSON.stringify({ totalPoints: d.points, modulesDone: d.modulesDone || 0 }))
         }
         navigate('/dashboard')
-
       } else if (mode === 'forgot') {
         await sendPasswordResetEmail(auth, email, { url: window.location.origin, handleCodeInApp: false })
         setSubmitted(true)
@@ -306,7 +208,7 @@ export default function Login() {
   const inputClass = "bg-transparent text-white w-full outline-none text-sm placeholder-gray-500"
   const inputWrap = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(80,140,255,0.35)' }
   const btnStyle = { background: loading ? 'rgba(80,100,200,0.5)' : 'linear-gradient(135deg,#1a3fc4,#2d6fff,#7c3aed)', boxShadow: '0 0 30px rgba(80,100,255,0.5)' }
-  const cardStyle = { background: 'rgba(6,15,40,0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(80,140,255,0.2)', boxShadow: '0 0 60px rgba(40,80,255,0.15),0 20px 60px rgba(0,0,0,0.6)' }
+  const cardStyle = { background: 'rgba(6,15,40,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(80,140,255,0.2)', boxShadow: '0 0 60px rgba(40,80,255,0.15),0 20px 60px rgba(0,0,0,0.6)' }
 
   const RuleItem = ({ passed, text }) => (
     <div className="flex items-center gap-2">
@@ -317,9 +219,11 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      <CyberCanvas />
-      <div className="w-full max-w-md relative" style={{ zIndex: 10 }}>
 
+      {/* Desktop = canvas animation, Mobile = CSS animation */}
+      {mobile ? <MobileBackground /> : <CyberCanvas />}
+
+      <div className="w-full max-w-md relative" style={{ zIndex: 10 }}>
         <div className="flex flex-col items-center mb-8">
           <div className="relative mb-4">
             <div className="absolute inset-0 rounded-full blur-2xl opacity-70" style={{ background: 'radial-gradient(circle,rgba(80,120,255,0.9) 0%,rgba(120,40,220,0.6) 50%,transparent 80%)' }} />
