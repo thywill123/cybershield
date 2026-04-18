@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Users, Trophy, BookOpen, TrendingUp, CheckCircle, XCircle, Shield, Loader } from 'lucide-react'
+import { ArrowLeft, Users, Trophy, BookOpen, TrendingUp, CheckCircle, XCircle, Shield, Loader, LogOut } from 'lucide-react'
 import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore'
-import { db } from '../firebase'
+import { signOut } from 'firebase/auth'
+import { db, auth } from '../firebase'
 
 function SubtleCanvas() {
   const canvasRef = useRef(null)
@@ -39,34 +40,47 @@ export default function Admin() {
   const [users, setUsers] = useState([])
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(true)
+  const [authChecked, setAuthChecked] = useState(false)
+  const [adminUser, setAdminUser] = useState(null)
 
   useEffect(() => {
+    // Check admin authentication
+    const adminSession = localStorage.getItem('cybershield_admin')
+    if (!adminSession) {
+      navigate('/admin-login')
+      return
+    }
+    const admin = JSON.parse(adminSession)
+    setAdminUser(admin)
+    setAuthChecked(true)
+
     const fetchData = async () => {
       try {
-        // Fetch all users
         const usersSnap = await getDocs(collection(db, 'users'))
-        const usersData = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        const usersData = usersSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => u.role !== 'admin')
         setUsers(usersData)
-
-        // Fetch recent results
-        const resultsSnap = await getDocs(query(collection(db, 'results'), orderBy('timestamp', 'desc'), limit(20)))
+        const resultsSnap = await getDocs(query(collection(db, 'results'), orderBy('timestamp', 'desc'), limit(50)))
         const resultsData = resultsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
         setResults(resultsData)
-      } catch (err) {
-        console.log('Error fetching data:', err)
-      }
+      } catch (err) { console.log('Error:', err) }
       setLoading(false)
     }
     fetchData()
-  }, [])
+  }, [navigate])
 
-  // Calculate real stats
+  const handleLogout = async () => {
+    await signOut(auth)
+    localStorage.removeItem('cybershield_admin')
+    navigate('/admin-login')
+  }
+
+  if (!authChecked) return null
+
   const totalUsers = users.length
   const totalPoints = users.reduce((sum, u) => sum + (u.points || 0), 0)
   const totalCompletions = results.length
   const avgScore = results.length > 0 ? Math.round(results.reduce((sum, r) => sum + (r.score || 0), 0) / results.length) : 0
 
-  // Module stats from real results
   const moduleStats = MODULE_NAMES.map((name, i) => {
     const moduleResults = results.filter(r => r.moduleIndex === i)
     const avgModuleScore = moduleResults.length > 0 ? Math.round(moduleResults.reduce((sum, r) => sum + r.score, 0) / moduleResults.length) : 0
@@ -102,13 +116,18 @@ export default function Admin() {
           <span className="font-bold text-lg" style={{ background: 'linear-gradient(135deg,#60a5fa,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CyberShield</span>
           <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ background: 'rgba(37,99,235,0.2)', border: '1px solid rgba(37,99,235,0.3)', color: '#60a5fa' }}>Admin Panel</span>
         </div>
-        <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-gray-400 hover:text-white transition"><ArrowLeft className="w-4 h-4" />Back to Dashboard</button>
+        <div className="flex items-center gap-4">
+          <span className="text-gray-400 text-sm hidden md:block">{adminUser?.name}</span>
+          <button onClick={handleLogout} className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition text-sm">
+            <LogOut className="w-4 h-4" />Logout
+          </button>
+        </div>
       </nav>
 
       <div className="max-w-6xl mx-auto px-6 py-8 relative" style={{ zIndex: 10 }}>
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-white">Platform Administration</h1>
-          <p className="text-gray-400 mt-1">Monitor users, training results and platform analytics — live data</p>
+          <p className="text-gray-400 mt-1">Live data — Monitor users, training results and platform analytics</p>
         </div>
 
         <div className="flex gap-3 mb-8 flex-wrap">
@@ -117,7 +136,6 @@ export default function Admin() {
           ))}
         </div>
 
-        {/* OVERVIEW */}
         {activeTab === 'overview' && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -138,7 +156,7 @@ export default function Admin() {
             <div className="rounded-xl p-6 mb-6" style={cardStyle}>
               <h2 className="text-lg font-semibold text-white mb-4">Recent Activity</h2>
               {results.length === 0 ? (
-                <p className="text-gray-400 text-sm text-center py-4">No quiz results yet. Users need to complete quizzes first.</p>
+                <p className="text-gray-400 text-sm text-center py-4">No quiz results yet.</p>
               ) : (
                 <div className="space-y-3">
                   {results.slice(0, 8).map((r, i) => (
@@ -179,7 +197,6 @@ export default function Admin() {
           </>
         )}
 
-        {/* USERS */}
         {activeTab === 'users' && (
           <div className="rounded-xl overflow-hidden" style={cardStyle}>
             <div className="p-6 border-b border-white border-opacity-5">
@@ -192,7 +209,7 @@ export default function Admin() {
                 <table className="w-full">
                   <thead>
                     <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      {['Name', 'Email', 'Institution', 'Modules Done', 'Points', 'Joined'].map(h => (
+                      {['Name', 'Email', 'Institution', 'Modules Done', 'Total Points', 'Weekly Points', 'Joined'].map(h => (
                         <th key={h} className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
@@ -210,6 +227,7 @@ export default function Admin() {
                         <td className="px-6 py-4 text-gray-400 text-sm">{u.institution || '—'}</td>
                         <td className="px-6 py-4"><span className="text-sm font-medium" style={{ color: u.modulesDone === 4 ? '#4ade80' : u.modulesDone >= 2 ? '#60a5fa' : '#f87171' }}>{u.modulesDone || 0}/4</span></td>
                         <td className="px-6 py-4"><span className="text-yellow-400 text-sm font-semibold">{u.points || 0} pts</span></td>
+                        <td className="px-6 py-4"><span className="text-blue-400 text-sm font-semibold">{u.weeklyPoints || 0} pts</span></td>
                         <td className="px-6 py-4 text-gray-400 text-sm">{u.joined || '—'}</td>
                       </tr>
                     ))}
@@ -220,7 +238,6 @@ export default function Admin() {
           </div>
         )}
 
-        {/* RESULTS */}
         {activeTab === 'results' && (
           <div className="rounded-xl overflow-hidden" style={cardStyle}>
             <div className="p-6 border-b border-white border-opacity-5">
@@ -260,7 +277,6 @@ export default function Admin() {
           </div>
         )}
 
-        {/* MODULES */}
         {activeTab === 'modules' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {moduleStats.map((mod, i) => (

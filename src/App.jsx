@@ -5,6 +5,7 @@ import TrainingModule from './pages/TrainingModule'
 import Quiz from './pages/Quiz'
 import AIChat from './pages/AIChat'
 import Admin from './pages/Admin'
+import AdminLogin from './pages/AdminLogin'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/ai-chat" element={<AIChat />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
       </Routes>
     </Router>
   )

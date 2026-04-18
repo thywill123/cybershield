@@ -7,9 +7,7 @@ import { db } from '../firebase'
 function RadarCanvas() {
   const canvasRef = useRef(null)
   useEffect(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    let animationId
+    const canvas = canvasRef.current; const ctx = canvas.getContext('2d'); let animationId
     const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
     resize(); window.addEventListener('resize', resize)
     let angle = 0; const sweepLength = Math.PI * 0.6
@@ -50,10 +48,26 @@ function RadarCanvas() {
 const MODULE_INDEX = { 'Phishing Awareness': 0, 'Social Engineering': 1, 'Password Security': 2, 'Malware & Ransomware': 3 }
 
 const MODULE_TOPICS = {
-  'Phishing Awareness': { topic: 'phishing emails, fake websites, email spoofing, suspicious links, and email-based scams', forbidden: 'Do NOT include questions about passwords, malware, social engineering manipulation, USB drives, or any other cybersecurity topic.' },
-  'Social Engineering': { topic: 'social engineering tactics such as pretexting, baiting, tailgating, vishing, impersonation, and psychological manipulation by attackers', forbidden: 'Do NOT include questions about email phishing, passwords, malware, ransomware, or any other cybersecurity topic.' },
-  'Password Security': { topic: 'password creation, password strength, password managers, two-factor authentication, password reuse, and credential security', forbidden: 'Do NOT include questions about phishing emails, malware, social engineering, USB drives, or any other cybersecurity topic.' },
-  'Malware & Ransomware': { topic: 'malware types (viruses, trojans, spyware, ransomware), how malware spreads, malware prevention, antivirus software, and ransomware attacks', forbidden: 'Do NOT include questions about phishing emails, passwords, social engineering manipulation, or any other cybersecurity topic.' },
+  'Phishing Awareness': {
+    topic: 'phishing emails, fake websites, email spoofing, suspicious links, and email-based scams',
+    forbidden: 'Do NOT include questions about passwords, malware, social engineering manipulation, USB drives, or any other cybersecurity topic.',
+    threats: 'Recent emerging phishing threats include: AI-generated phishing emails that mimic real colleagues, QR code phishing (quishing), deepfake voice phishing calls, and phishing attacks targeting cloud service accounts like Microsoft 365 and Google Workspace.'
+  },
+  'Social Engineering': {
+    topic: 'social engineering tactics such as pretexting, baiting, tailgating, vishing, impersonation, and psychological manipulation by attackers',
+    forbidden: 'Do NOT include questions about email phishing, passwords, malware, ransomware, or any other cybersecurity topic.',
+    threats: 'Recent emerging social engineering threats include: AI-powered deepfake video calls impersonating executives (CEO fraud), WhatsApp and SMS-based social engineering attacks, attackers impersonating IT helpdesk staff via Microsoft Teams or Slack, and fake job offer social engineering scams.'
+  },
+  'Password Security': {
+    topic: 'password creation, password strength, password managers, two-factor authentication, password reuse, and credential security',
+    forbidden: 'Do NOT include questions about phishing emails, malware, social engineering, USB drives, or any other cybersecurity topic.',
+    threats: 'Recent emerging password threats include: credential stuffing attacks using leaked password databases, SIM swapping attacks to bypass SMS-based 2FA, adversary-in-the-middle attacks bypassing authenticator apps, and password spraying attacks targeting corporate accounts.'
+  },
+  'Malware & Ransomware': {
+    topic: 'malware types (viruses, trojans, spyware, ransomware), how malware spreads, malware prevention, antivirus software, and ransomware attacks',
+    forbidden: 'Do NOT include questions about phishing emails, passwords, social engineering manipulation, or any other cybersecurity topic.',
+    threats: 'Recent emerging malware threats include: ransomware-as-a-service (RaaS) attacks targeting hospitals and schools, info-stealing malware hidden in free software downloads, malicious browser extensions stealing credentials, and fileless malware that operates in memory without leaving traces on disk.'
+  },
 }
 
 const scenarioContexts = [
@@ -82,16 +96,44 @@ export default function Quiz() {
 
   const generateQuestions = async () => {
     setLoading(true); setError('')
-    const moduleInfo = MODULE_TOPICS[moduleName] || { topic: moduleName, forbidden: '' }
+    const moduleInfo = MODULE_TOPICS[moduleName] || { topic: moduleName, forbidden: '', threats: '' }
     const context = scenarioContexts[attemptCount % scenarioContexts.length]
     const seed = Date.now()
+    const currentDate = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514', max_tokens: 1500,
-          messages: [{ role: 'user', content: `You are a cybersecurity quiz generator. Generate exactly 5 multiple choice quiz questions STRICTLY about: ${moduleInfo.topic}.\n\nSTRICT RULES:\n1. ${moduleInfo.forbidden}\n2. Every question MUST be directly and only about ${moduleName}.\n3. ${context}\n4. All 5 questions must be completely different from each other.\n5. Use session ID ${seed} to ensure unique questions.\n6. Each question must be a realistic workplace scenario for a non-technical employee.\n\nReturn ONLY a valid JSON array:\n[\n  {\n    "question": "Scenario question strictly about ${moduleName}?",\n    "options": ["Option A","Option B","Option C","Option D"],\n    "correct": 0,\n    "explanation": "Why this answer is correct."\n  }\n]` }]
+          messages: [{
+            role: 'user',
+            content: `You are a cybersecurity quiz generator. Today is ${currentDate}. Generate exactly 5 multiple choice quiz questions STRICTLY about: ${moduleInfo.topic}.
+
+STRICT RULES:
+1. ${moduleInfo.forbidden}
+2. Every question MUST be directly and only about ${moduleName}.
+3. ${context}
+4. All 5 questions must be completely different from each other.
+5. Use session ID ${seed} to ensure unique questions never seen before.
+6. Each question must be a realistic workplace scenario for a non-technical employee.
+7. IMPORTANT — Include at least 2 questions based on these EMERGING REAL-WORLD THREATS from ${currentDate}: ${moduleInfo.threats}
+
+Return ONLY a valid JSON array with no extra text:
+[
+  {
+    "question": "Realistic scenario question strictly about ${moduleName}?",
+    "options": ["Option A","Option B","Option C","Option D"],
+    "correct": 0,
+    "explanation": "Why this answer is correct in the context of ${moduleName}.",
+    "isEmergingThreat": false
+  }
+]
+
+Set "isEmergingThreat": true for questions based on the emerging threats listed above.
+The "correct" field is the index (0-3) of the correct answer.`
+          }]
         })
       })
       const data = await response.json()
@@ -120,14 +162,17 @@ export default function Quiz() {
     const points = score * 50
     const moduleIdx = MODULE_INDEX[moduleName]
 
-    // Save to localStorage
+    // Update localStorage — weekly progress
     const existing = JSON.parse(localStorage.getItem('cybershield_progress') || '{}')
     const existingStats = JSON.parse(localStorage.getItem('cybershield_stats') || '{"totalPoints":0,"modulesDone":0}')
+    const existingWeekly = JSON.parse(localStorage.getItem('cybershield_weekly_stats') || '{"weeklyPoints":0}')
     existing[moduleIdx] = Math.max(existing[moduleIdx] || 0, percentage)
     existingStats.totalPoints = (existingStats.totalPoints || 0) + points
     existingStats.modulesDone = Object.values(existing).filter(v => v > 0).length
+    existingWeekly.weeklyPoints = (existingWeekly.weeklyPoints || 0) + points
     localStorage.setItem('cybershield_progress', JSON.stringify(existing))
     localStorage.setItem('cybershield_stats', JSON.stringify(existingStats))
+    localStorage.setItem('cybershield_weekly_stats', JSON.stringify(existingWeekly))
 
     // Save to Firestore
     try {
@@ -135,32 +180,28 @@ export default function Quiz() {
       if (userStr) {
         const user = JSON.parse(userStr)
         if (user.uid) {
-          // Update user progress and points
-          await updateDoc(doc(db, 'users', user.uid), {
-            [`progress.${moduleIdx}`]: Math.max(existing[moduleIdx] || 0, percentage),
-            points: existingStats.totalPoints,
-            modulesDone: existingStats.modulesDone,
+          const userRef = doc(db, 'users', user.uid)
+          const snap = await getDoc(userRef)
+          const userData = snap.exists() ? snap.data() : {}
+          const oldWeeklyProgress = userData.weeklyProgress || {}
+          const newWeeklyProgress = { ...oldWeeklyProgress, [moduleIdx]: Math.max(oldWeeklyProgress[moduleIdx] || 0, percentage) }
+
+          await updateDoc(userRef, {
+            [`weeklyProgress.${moduleIdx}`]: Math.max(oldWeeklyProgress[moduleIdx] || 0, percentage),
+            points: (userData.points || 0) + points, // cumulative — never resets
+            weeklyPoints: (userData.weeklyPoints || 0) + points, // resets Monday
+            modulesDone: Object.values(newWeeklyProgress).filter(v => v > 0).length,
           })
-          // Save quiz result
           await addDoc(collection(db, 'results'), {
-            userId: user.uid,
-            userName: user.name,
-            userEmail: user.email,
-            institution: user.institution || '',
-            module: moduleName,
-            moduleIndex: moduleIdx,
-            score: percentage,
-            pointsEarned: points,
-            correct: score,
-            total: questions.length,
-            passed: percentage >= 60,
+            userId: user.uid, userName: user.name, userEmail: user.email,
+            institution: user.institution || '', module: moduleName,
+            moduleIndex: moduleIdx, score: percentage, pointsEarned: points,
+            correct: score, total: questions.length, passed: percentage >= 60,
             timestamp: new Date(),
           })
         }
       }
-    } catch (err) {
-      console.log('Firestore save error:', err)
-    }
+    } catch (err) { console.log('Save error:', err) }
   }
 
   const handleRetry = () => {
@@ -172,6 +213,7 @@ export default function Quiz() {
 
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0
   const points = score * 50
+  const emergingCount = questions.filter(q => q.isEmergingThreat).length
 
   const cardStyle = { background: 'rgba(8,18,45,0.82)', backdropFilter: 'blur(14px)', border: '1px solid rgba(40,90,200,0.22)', boxShadow: '0 4px 24px rgba(0,0,0,0.45)' }
   const navStyle = { background: 'rgba(4,10,28,0.90)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(30,70,180,0.2)' }
@@ -194,8 +236,9 @@ export default function Quiz() {
             <div className="text-5xl mb-4">🎯</div>
             <h2 className="text-2xl font-bold mb-2 text-white">{moduleName} Quiz</h2>
             <p className="text-gray-400 mb-2">5 AI-generated scenario questions</p>
-            <p className="text-gray-400 text-sm mb-6">All questions are strictly about <span className="text-blue-400 font-medium">{moduleName}</span> only</p>
-            {attemptCount > 0 && <p className="text-green-400 text-xs mb-4">✓ Fresh unique questions will be generated for this attempt</p>}
+            <p className="text-gray-400 text-sm mb-2">All questions strictly about <span className="text-blue-400 font-medium">{moduleName}</span></p>
+            <p className="text-green-400 text-xs mb-6">⚡ Includes questions on emerging real-world threats</p>
+            {attemptCount > 0 && <p className="text-blue-400 text-xs mb-4">✓ Fresh unique questions will be generated</p>}
             {error && <div className="rounded-xl p-4 mb-6 text-red-300 text-sm" style={{ background: 'rgba(120,20,20,0.5)', border: '1px solid rgba(200,60,60,0.4)' }}>{error}</div>}
             <button onClick={generateQuestions} className="w-full text-white font-semibold py-3 rounded-xl transition hover:opacity-90" style={{ background: 'linear-gradient(135deg,#1d4ed8,#2563eb,#7c3aed)', boxShadow: '0 0 25px rgba(37,99,235,0.4)' }}>
               {attemptCount > 0 ? 'Generate New Questions & Start' : 'Generate Questions & Start Quiz'}
@@ -207,7 +250,7 @@ export default function Quiz() {
           <div className="rounded-2xl p-8 text-center" style={cardStyle}>
             <Loader className="w-10 h-10 text-blue-400 animate-spin mx-auto mb-4" />
             <p className="text-white font-medium">Claude AI is generating your questions...</p>
-            <p className="text-gray-400 text-sm mt-2">Creating fresh <span className="text-blue-400">{moduleName}</span> questions</p>
+            <p className="text-gray-400 text-sm mt-1">Including emerging real-world threats for <span className="text-blue-400">{moduleName}</span></p>
           </div>
         )}
 
@@ -219,10 +262,17 @@ export default function Quiz() {
                 <div className="h-2 rounded-full transition-all" style={{ width: `${((current + 1) / questions.length) * 100}%`, background: 'linear-gradient(90deg,#2563eb,#7c3aed)' }} />
               </div>
             </div>
+
             <div className="rounded-xl p-6 mb-4" style={cardStyle}>
-              <div className="flex items-center gap-2 mb-3"><span className="text-xs px-2 py-1 rounded-full font-medium" style={{ background: 'rgba(37,99,235,0.2)', border: '1px solid rgba(37,99,235,0.3)', color: '#60a5fa' }}>{moduleName}</span></div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ background: 'rgba(37,99,235,0.2)', border: '1px solid rgba(37,99,235,0.3)', color: '#60a5fa' }}>{moduleName}</span>
+                {questions[current].isEmergingThreat && (
+                  <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ background: 'rgba(220,38,38,0.2)', border: '1px solid rgba(220,38,38,0.3)', color: '#f87171' }}>⚡ Emerging Threat</span>
+                )}
+              </div>
               <h2 className="text-lg font-semibold leading-relaxed text-white">{questions[current].question}</h2>
             </div>
+
             <div className="space-y-3 mb-4">
               {questions[current].options.map((opt, i) => {
                 let style = { ...cardStyle, cursor: 'pointer' }; let textColor = 'text-gray-300'
@@ -241,6 +291,7 @@ export default function Quiz() {
                 )
               })}
             </div>
+
             {answered && <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(10,30,80,0.7)', border: '1px solid rgba(60,120,255,0.3)', backdropFilter: 'blur(12px)' }}><p className="text-blue-300 text-sm"><span className="font-semibold">Explanation: </span>{questions[current].explanation}</p></div>}
             {answered && <button onClick={handleNext} className="w-full text-white font-semibold py-3 rounded-xl transition hover:opacity-90" style={{ background: 'linear-gradient(135deg,#1d4ed8,#2563eb,#7c3aed)', boxShadow: '0 0 25px rgba(37,99,235,0.35)' }}>{current + 1 >= questions.length ? 'See Results' : 'Next Question →'}</button>}
           </>
@@ -251,13 +302,16 @@ export default function Quiz() {
             <div className="rounded-2xl p-8 mb-6" style={cardStyle}>
               <div className="text-6xl mb-4">{percentage >= 80 ? '🏆' : percentage >= 50 ? '👍' : '📚'}</div>
               <h2 className="text-2xl font-bold mb-2 text-white">{percentage >= 80 ? 'Excellent Work!' : percentage >= 50 ? 'Good Effort!' : 'Keep Practicing!'}</h2>
-              <p className="text-gray-400 mb-6">{percentage >= 80 ? 'You have a strong understanding of this topic!' : percentage >= 50 ? 'Review the module and try again.' : 'Go back and read the module carefully.'}</p>
+              <p className="text-gray-400 mb-4">{percentage >= 80 ? 'You have a strong understanding of this topic!' : percentage >= 50 ? 'Review the module and try again.' : 'Go back and read the module carefully.'}</p>
+              {emergingCount > 0 && <p className="text-green-400 text-sm mb-4">⚡ {emergingCount} question{emergingCount > 1 ? 's were' : ' was'} based on emerging real-world threats</p>}
               <div className="w-32 h-32 rounded-full flex flex-col items-center justify-center mx-auto mb-6" style={{ background: 'linear-gradient(135deg,#1d4ed8,#7c3aed)', boxShadow: '0 0 30px rgba(37,99,235,0.4)' }}>
                 <span className="text-3xl font-bold text-white">{percentage}%</span>
                 <span className="text-blue-200 text-sm">{score}/{questions.length}</span>
               </div>
               <div className="rounded-xl p-4 mb-6" style={{ background: 'rgba(80,60,0,0.5)', border: '1px solid rgba(200,160,0,0.35)', backdropFilter: 'blur(12px)' }}>
-                <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-1" /><p className="text-yellow-300 font-semibold">+{points} Points Earned!</p>
+                <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
+                <p className="text-yellow-300 font-semibold">+{points} Points Earned!</p>
+                <p className="text-yellow-600 text-xs mt-1">Added to weekly and cumulative totals</p>
               </div>
               <div className="flex justify-center gap-2 mb-2">
                 {answers.map((a, i) => <div key={i} className={`w-8 h-8 rounded-full flex items-center justify-center ${a.correct ? 'bg-green-600' : 'bg-red-600'}`}>{a.correct ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}</div>)}
