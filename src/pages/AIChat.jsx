@@ -3,32 +3,34 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Send, Bot, User, Loader } from 'lucide-react'
 import useSessionTimeout from '../hooks/useSessionTimeout'
 
-const systemPrompt = `You are CyberShield AI, a friendly and knowledgeable cybersecurity awareness assistant for institutional employees.
+const systemPrompt = `You are CyberShield AI, a friendly cybersecurity awareness assistant.
 
-You help users by:
-- Answering questions about cybersecurity threats and how to stay safe
-- Explaining phishing, social engineering, malware, and password security in simple terms
-- Giving practical advice that non-technical employees can easily follow
-- Providing real examples of cyber threats when asked
-- Helping users understand what to do if they think they have been attacked
+Your ONLY job is to answer questions and have conversations about cybersecurity topics. 
 
-Your communication style:
-- Be conversational, friendly and encouraging — not robotic or formal
-- Keep explanations simple and jargon-free for non-technical users
-- Give direct, practical answers to questions
-- If a user asks you to test them or simulate a scenario, you may do so
-- If a user asks a general question, answer it directly without turning it into a test
-- Do not generate quiz questions unless the user specifically asks to be tested
+STRICT RULES:
+- NEVER grade the user
+- NEVER score the user
+- NEVER say "correct" or "incorrect" unless the user explicitly asks you to test them
+- NEVER generate multiple choice questions unless the user says "quiz me" or "test me"
+- NEVER ask the user "how would you respond?" or put them in a scenario unless they ask
+- ALWAYS answer questions directly and clearly
+- Keep all answers simple enough for non-technical employees to understand
 
-Topics you cover:
-- Phishing emails and how to spot them
-- Social engineering and manipulation tactics
+Topics you can discuss:
+- Phishing emails and how to identify them
+- Social engineering and manipulation tactics  
 - Password security and best practices
-- Malware and ransomware prevention
-- Safe internet and email practices
+- Malware, viruses, spyware and ransomware
+- Safe browsing and email habits
 - What to do after a security incident
+- Two-factor authentication
+- VPNs and public WiFi safety
 
-Never provide harmful or malicious information. Always promote safe cybersecurity practices.`
+If someone asks "what is phishing?" — just answer it directly.
+If someone asks "how do I make a strong password?" — just answer it directly.
+If someone says "quiz me" or "test me" — then and only then you can ask them questions.
+
+Be friendly, conversational and helpful. You are an assistant, not an examiner.`
 
 function WaveCanvas() {
   const canvasRef = useRef(null)
@@ -190,7 +192,7 @@ export default function AIChat() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: `Hello! I am CyberShield AI, your personal cybersecurity assistant.\n\nI am here to help you stay safe online. You can ask me anything about cybersecurity — no question is too basic!\n\nFor example:\n- "What is a phishing email and how do I spot one?"\n- "How do I create a strong password?"\n- "I clicked a suspicious link — what should I do?"\n- "What is ransomware?"\n- "Test me on social engineering"\n\nHow can I help you today?`
+      content: `Hi there! I am CyberShield AI 👋\n\nI am here to answer any cybersecurity questions you have. Just type your question below and I will answer it!\n\nNot sure where to start? Click one of the suggestions below.`
     }
   ])
   const [input, setInput] = useState('')
@@ -236,7 +238,7 @@ export default function AIChat() {
     } catch (error) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Connection error. Please check your API key in the .env file and try again.'
+        content: 'Connection error. Please check your internet connection and try again.'
       }])
     }
     setLoading(false)
@@ -266,7 +268,7 @@ export default function AIChat() {
   const clearChat = () => {
     setMessages([{
       role: 'assistant',
-      content: `Hello! I am CyberShield AI, your personal cybersecurity assistant.\n\nI am here to help you stay safe online. You can ask me anything about cybersecurity — no question is too basic!\n\nFor example:\n- "What is a phishing email and how do I spot one?"\n- "How do I create a strong password?"\n- "I clicked a suspicious link — what should I do?"\n- "What is ransomware?"\n- "Test me on social engineering"\n\nHow can I help you today?`
+      content: `Hi there! I am CyberShield AI 👋\n\nI am here to answer any cybersecurity questions you have. Just type your question below and I will answer it!\n\nNot sure where to start? Click one of the suggestions below.`
     }])
     setSessionCount(0)
   }
@@ -355,7 +357,7 @@ export default function AIChat() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Suggestions */}
+        {/* Suggestion buttons — only show on first message */}
         {messages.length === 1 && (
           <div className="grid grid-cols-2 gap-2 mb-4">
             {suggestions.map((s, i) => (
@@ -368,7 +370,7 @@ export default function AIChat() {
           </div>
         )}
 
-        {/* Input */}
+        {/* Input box */}
         <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={cardStyle}>
           <input
             type="text"
@@ -378,7 +380,9 @@ export default function AIChat() {
             placeholder="Ask me anything about cybersecurity..."
             className="bg-transparent text-white flex-1 outline-none text-sm placeholder-gray-500"
           />
-          <button onClick={sendMessage} disabled={loading || !input.trim()}
+          <button
+            onClick={sendMessage}
+            disabled={loading || !input.trim()}
             className="p-2 rounded-xl transition disabled:opacity-40 hover:opacity-90"
             style={{ background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)', boxShadow: '0 0 15px rgba(37,99,235,0.35)' }}>
             <Send className="w-4 h-4 text-white" />
