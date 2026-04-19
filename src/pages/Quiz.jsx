@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, XCircle, Trophy, RotateCcw, Loader } from 'lucide-react'
 import { doc, updateDoc, addDoc, collection, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
+import useSessionTimeout from '../hooks/useSessionTimeout'
 
 function RadarCanvas() {
   const canvasRef = useRef(null)
@@ -93,6 +94,9 @@ export default function Quiz() {
   const [answers, setAnswers] = useState([])
   const [error, setError] = useState('')
   const [attemptCount, setAttemptCount] = useState(0)
+
+  // ✅ Session timeout — 30 minutes of inactivity
+  useSessionTimeout()
 
   const generateQuestions = async () => {
     setLoading(true); setError('')

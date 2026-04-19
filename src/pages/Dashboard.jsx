@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
 import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
+import useSessionTimeout from '../hooks/useSessionTimeout'
 
 function SubtleCanvas() {
   const canvasRef = useRef(null)
@@ -30,29 +31,24 @@ function SubtleCanvas() {
   return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full" style={{ zIndex: 0 }} />
 }
 
-// Get the most recent Monday midnight
 const getLastMonday = () => {
   const now = new Date()
-  const day = now.getDay() // 0=Sun, 1=Mon...
-  const diff = day === 0 ? 6 : day - 1 // days since Monday
+  const day = now.getDay()
+  const diff = day === 0 ? 6 : day - 1
   const monday = new Date(now)
   monday.setDate(now.getDate() - diff)
   monday.setHours(0, 0, 0, 0)
   return monday
 }
 
-// Check if weekly reset is needed and do it
 const checkWeeklyReset = async (uid) => {
   try {
     const userRef = doc(db, 'users', uid)
     const snap = await getDoc(userRef)
     if (!snap.exists()) return
-
     const data = snap.data()
     const lastReset = data.lastWeeklyReset ? new Date(data.lastWeeklyReset) : null
     const lastMonday = getLastMonday()
-
-    // If no reset has happened or last reset was before this Monday — reset weekly data
     if (!lastReset || lastReset < lastMonday) {
       await updateDoc(userRef, {
         weeklyPoints: 0,
@@ -60,7 +56,6 @@ const checkWeeklyReset = async (uid) => {
         weeklyBadges: [],
         lastWeeklyReset: lastMonday.toISOString(),
       })
-      // Update localStorage weekly stats
       localStorage.setItem('cybershield_weekly_stats', JSON.stringify({ weeklyPoints: 0 }))
       localStorage.setItem('cybershield_progress', JSON.stringify({ 0: 0, 1: 0, 2: 0, 3: 0 }))
       return { reset: true, data: { ...data, weeklyPoints: 0, weeklyProgress: { 0: 0, 1: 0, 2: 0, 3: 0 } } }
@@ -72,7 +67,6 @@ const checkWeeklyReset = async (uid) => {
   }
 }
 
-// Days until next Monday
 const daysUntilMonday = () => {
   const now = new Date()
   const day = now.getDay()
@@ -87,13 +81,13 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ totalPoints: 0, weeklyPoints: 0, modulesDone: 0 })
   const [weeklyReset, setWeeklyReset] = useState(false)
 
+  useSessionTimeout()
+
   useEffect(() => {
     const stored = localStorage.getItem('cybershield_user')
     if (stored) {
       const u = JSON.parse(stored)
       setUser(u)
-
-      // Check and perform weekly reset if needed
       if (u.uid) {
         checkWeeklyReset(u.uid).then(result => {
           if (result?.reset) setWeeklyReset(true)
@@ -101,30 +95,18 @@ export default function Dashboard() {
             const d = result.data
             const weeklyProg = d.weeklyProgress || { 0: 0, 1: 0, 2: 0, 3: 0 }
             setProgress(weeklyProg)
-            setStats({
-              totalPoints: d.points || 0,
-              weeklyPoints: d.weeklyPoints || 0,
-              modulesDone: Object.values(weeklyProg).filter(v => v > 0).length,
-            })
+            setStats({ totalPoints: d.points || 0, weeklyPoints: d.weeklyPoints || 0, modulesDone: Object.values(weeklyProg).filter(v => v > 0).length })
             localStorage.setItem('cybershield_progress', JSON.stringify(weeklyProg))
           }
         })
       }
     }
-
-    // Load from localStorage as fallback
     const savedProgress = localStorage.getItem('cybershield_progress')
     if (savedProgress) setProgress(JSON.parse(savedProgress))
     const savedStats = localStorage.getItem('cybershield_stats')
-    if (savedStats) {
-      const s = JSON.parse(savedStats)
-      setStats(prev => ({ ...prev, totalPoints: s.totalPoints || 0 }))
-    }
+    if (savedStats) { const s = JSON.parse(savedStats); setStats(prev => ({ ...prev, totalPoints: s.totalPoints || 0 })) }
     const savedWeekly = localStorage.getItem('cybershield_weekly_stats')
-    if (savedWeekly) {
-      const w = JSON.parse(savedWeekly)
-      setStats(prev => ({ ...prev, weeklyPoints: w.weeklyPoints || 0 }))
-    }
+    if (savedWeekly) { const w = JSON.parse(savedWeekly); setStats(prev => ({ ...prev, weeklyPoints: w.weeklyPoints || 0 })) }
   }, [])
 
   const handleLogout = () => {
@@ -139,7 +121,6 @@ export default function Dashboard() {
     { title: 'Malware & Ransomware', desc: 'Understand and prevent malware', progress: progress[3] || 0, color: 'bg-red-600' },
   ]
 
-  // Weekly badges — reset every Monday
   const weeklyBadges = [
     { title: 'First Login', icon: '🏅', desc: 'Logged in this week', earned: true },
     { title: 'Phishing Pro', icon: '🎣', desc: 'Score 80%+ on Phishing', earned: (progress[0] || 0) >= 80 },
@@ -178,7 +159,6 @@ export default function Dashboard() {
 
       <div className="max-w-5xl mx-auto px-6 py-8 relative" style={{ zIndex: 10 }}>
 
-        {/* Weekly reset notification */}
         {weeklyReset && (
           <div className="rounded-xl p-4 mb-6 flex items-center gap-3" style={{ background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(37,99,235,0.3)' }}>
             <span className="text-2xl">🔄</span>
@@ -189,7 +169,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Welcome */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold">
             Welcome back, <span style={{ background: 'linear-gradient(135deg,#60a5fa,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{firstName}</span> 👋
@@ -197,7 +176,6 @@ export default function Dashboard() {
           <p className="text-gray-400 mt-1">Continue your cybersecurity training journey</p>
         </div>
 
-        {/* Stats — Weekly + Cumulative */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 mb-4">
           {[
             { label: 'Modules Done', value: modulesDone, icon: <BookOpen className="w-5 h-5" />, color: 'text-blue-400', sub: 'This week' },
@@ -214,13 +192,11 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Weekly reset countdown */}
         <div className="rounded-xl p-3 mb-8 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
           <span className="text-gray-400 text-xs">🔄 Weekly progress resets every Monday at midnight</span>
           <span className="text-blue-400 text-xs font-medium">{daysUntilMonday()} day{daysUntilMonday() !== 1 ? 's' : ''} until next reset</span>
         </div>
 
-        {/* Training Modules */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Training Modules</h2>
@@ -249,7 +225,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Weekly Badges */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Weekly Badges</h2>

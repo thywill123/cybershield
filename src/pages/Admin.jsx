@@ -4,6 +4,7 @@ import { ArrowLeft, Users, Trophy, BookOpen, TrendingUp, CheckCircle, XCircle, S
 import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore'
 import { signOut } from 'firebase/auth'
 import { db, auth } from '../firebase'
+import useSessionTimeout from '../hooks/useSessionTimeout'
 
 function SubtleCanvas() {
   const canvasRef = useRef(null)
@@ -42,6 +43,9 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
   const [adminUser, setAdminUser] = useState(null)
+
+  // ✅ Session timeout — 30 minutes of inactivity
+  useSessionTimeout()
 
   useEffect(() => {
     // Check admin authentication
