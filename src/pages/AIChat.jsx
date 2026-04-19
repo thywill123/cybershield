@@ -3,22 +3,30 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Send, Bot, User, Loader } from 'lucide-react'
 import useSessionTimeout from '../hooks/useSessionTimeout'
 
-const systemPrompt = `You are CyberShield AI, an expert cybersecurity awareness trainer for institutional employees.
+const systemPrompt = `You are CyberShield AI, a friendly and knowledgeable cybersecurity awareness assistant for institutional employees.
 
-You specialize in:
-- Phishing attacks and how to identify them
-- Social engineering tactics and manipulation
-- Password security best practices
+You help users by:
+- Answering questions about cybersecurity threats and how to stay safe
+- Explaining phishing, social engineering, malware, and password security in simple terms
+- Giving practical advice that non-technical employees can easily follow
+- Providing real examples of cyber threats when asked
+- Helping users understand what to do if they think they have been attacked
+
+Your communication style:
+- Be conversational, friendly and encouraging — not robotic or formal
+- Keep explanations simple and jargon-free for non-technical users
+- Give direct, practical answers to questions
+- If a user asks you to test them or simulate a scenario, you may do so
+- If a user asks a general question, answer it directly without turning it into a test
+- Do not generate quiz questions unless the user specifically asks to be tested
+
+Topics you cover:
+- Phishing emails and how to spot them
+- Social engineering and manipulation tactics
+- Password security and best practices
 - Malware and ransomware prevention
 - Safe internet and email practices
-
-Your role is to:
-- Simulate realistic cybersecurity threat scenarios
-- Ask the user how they would respond to threats
-- Give clear feedback on whether their response was correct
-- Explain why certain actions are dangerous or safe
-- Always be encouraging, clear, and practical
-- Keep explanations simple for non-technical employees
+- What to do after a security incident
 
 Never provide harmful or malicious information. Always promote safe cybersecurity practices.`
 
@@ -182,7 +190,7 @@ export default function AIChat() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: `Hello! I am CyberShield AI, your personal cybersecurity trainer.\n\nI can help you:\n- Practice spotting phishing emails\n- Recognize social engineering attacks\n- Learn password best practices\n- Understand malware threats\n\nTry asking me:\n"Show me a phishing email example"\n"Test me on social engineering"\n"How do I create a strong password?"`
+      content: `Hello! I am CyberShield AI, your personal cybersecurity assistant.\n\nI am here to help you stay safe online. You can ask me anything about cybersecurity — no question is too basic!\n\nFor example:\n- "What is a phishing email and how do I spot one?"\n- "How do I create a strong password?"\n- "I clicked a suspicious link — what should I do?"\n- "What is ransomware?"\n- "Test me on social engineering"\n\nHow can I help you today?`
     }
   ])
   const [input, setInput] = useState('')
@@ -249,16 +257,16 @@ export default function AIChat() {
   }
 
   const suggestions = [
-    'Show me a phishing email example',
-    'Test me on social engineering',
+    'What is a phishing email?',
     'How do I create a strong password?',
-    'What should I do if I clicked a suspicious link?',
+    'I clicked a suspicious link — what do I do?',
+    'What is ransomware and how do I prevent it?',
   ]
 
   const clearChat = () => {
     setMessages([{
       role: 'assistant',
-      content: `Hello! I am CyberShield AI, your personal cybersecurity trainer.\n\nI can help you:\n- Practice spotting phishing emails\n- Recognize social engineering attacks\n- Learn password best practices\n- Understand malware threats\n\nTry asking me:\n"Show me a phishing email example"\n"Test me on social engineering"\n"How do I create a strong password?"`
+      content: `Hello! I am CyberShield AI, your personal cybersecurity assistant.\n\nI am here to help you stay safe online. You can ask me anything about cybersecurity — no question is too basic!\n\nFor example:\n- "What is a phishing email and how do I spot one?"\n- "How do I create a strong password?"\n- "I clicked a suspicious link — what should I do?"\n- "What is ransomware?"\n- "Test me on social engineering"\n\nHow can I help you today?`
     }])
     setSessionCount(0)
   }
@@ -367,7 +375,7 @@ export default function AIChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about cybersecurity or request a scenario..."
+            placeholder="Ask me anything about cybersecurity..."
             className="bg-transparent text-white flex-1 outline-none text-sm placeholder-gray-500"
           />
           <button onClick={sendMessage} disabled={loading || !input.trim()}
