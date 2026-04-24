@@ -1,4 +1,4 @@
-import { BookOpen, Trophy, Brain, Bell, LogOut, ChevronRight, Flame, Star } from 'lucide-react'
+import { BookOpen, Trophy, Bell, LogOut, ChevronRight, Flame, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
 import { doc, updateDoc, getDoc } from 'firebase/firestore'
@@ -41,32 +41,6 @@ const getLastMonday = () => {
   return monday
 }
 
-const checkWeeklyReset = async (uid) => {
-  try {
-    const userRef = doc(db, 'users', uid)
-    const snap = await getDoc(userRef)
-    if (!snap.exists()) return
-    const data = snap.data()
-    const lastReset = data.lastWeeklyReset ? new Date(data.lastWeeklyReset) : null
-    const lastMonday = getLastMonday()
-    if (!lastReset || lastReset < lastMonday) {
-      await updateDoc(userRef, {
-        weeklyPoints: 0,
-        weeklyProgress: { 0: 0, 1: 0, 2: 0, 3: 0 },
-        weeklyBadges: [],
-        lastWeeklyReset: lastMonday.toISOString(),
-      })
-      localStorage.setItem('cybershield_weekly_stats', JSON.stringify({ weeklyPoints: 0 }))
-      localStorage.setItem('cybershield_progress', JSON.stringify({ 0: 0, 1: 0, 2: 0, 3: 0 }))
-      return { reset: true, data: { ...data, weeklyPoints: 0, weeklyProgress: { 0: 0, 1: 0, 2: 0, 3: 0 } } }
-    }
-    return { reset: false, data }
-  } catch (err) {
-    console.log('Reset check error:', err)
-    return null
-  }
-}
-
 const daysUntilMonday = () => {
   const now = new Date()
   const day = now.getDay()
@@ -85,28 +59,68 @@ export default function Dashboard() {
 
   useEffect(() => {
     const stored = localStorage.getItem('cybershield_user')
-    if (stored) {
-      const u = JSON.parse(stored)
-      setUser(u)
-      if (u.uid) {
-        checkWeeklyReset(u.uid).then(result => {
-          if (result?.reset) setWeeklyReset(true)
-          if (result?.data) {
-            const d = result.data
-            const weeklyProg = d.weeklyProgress || { 0: 0, 1: 0, 2: 0, 3: 0 }
-            setProgress(weeklyProg)
-            setStats({ totalPoints: d.points || 0, weeklyPoints: d.weeklyPoints || 0, modulesDone: Object.values(weeklyProg).filter(v => v > 0).length })
-            localStorage.setItem('cybershield_progress', JSON.stringify(weeklyProg))
-          }
+    if (!stored) return
+
+    const u = JSON.parse(stored)
+    setUser(u)
+
+    if (!u.uid) return
+
+    // ✅ ALWAYS load from Firestore first — localStorage is never trusted for progress
+    const loadFromFirestore = async () => {
+      try {
+        const userRef = doc(db, 'users', u.uid)
+        const snap = await getDoc(userRef)
+        if (!snap.exists()) return
+
+        const data = snap.data()
+        const lastReset = data.lastWeeklyReset ? new Date(data.lastWeeklyReset) : null
+        const lastMonday = getLastMonday()
+
+        let finalData = data
+
+        // Check if weekly reset is needed
+        if (!lastReset || lastReset < lastMonday) {
+          // Perform reset
+          await updateDoc(userRef, {
+            weeklyPoints: 0,
+            weeklyProgress: { 0: 0, 1: 0, 2: 0, 3: 0 },
+            weeklyBadges: [],
+            lastWeeklyReset: lastMonday.toISOString(),
+          })
+          finalData = { ...data, weeklyPoints: 0, weeklyProgress: { 0: 0, 1: 0, 2: 0, 3: 0 } }
+          setWeeklyReset(true)
+        }
+
+        // ✅ Use Firestore data ONLY — overwrite localStorage completely
+        const weeklyProg = finalData.weeklyProgress || { 0: 0, 1: 0, 2: 0, 3: 0 }
+
+        setProgress(weeklyProg)
+        setStats({
+          totalPoints: finalData.points || 0,
+          weeklyPoints: finalData.weeklyPoints || 0,
+          modulesDone: Object.values(weeklyProg).filter(v => v > 0).length,
         })
+
+        // ✅ Sync localStorage with what Firestore says — not the other way around
+        localStorage.setItem('cybershield_progress', JSON.stringify(weeklyProg))
+        localStorage.setItem('cybershield_stats', JSON.stringify({ totalPoints: finalData.points || 0 }))
+        localStorage.setItem('cybershield_weekly_stats', JSON.stringify({ weeklyPoints: finalData.weeklyPoints || 0 }))
+
+      } catch (err) {
+        console.log('Firestore load error:', err)
+
+        // ✅ Only fall back to localStorage if Firestore completely fails (offline)
+        const savedProgress = localStorage.getItem('cybershield_progress')
+        if (savedProgress) setProgress(JSON.parse(savedProgress))
+        const savedStats = localStorage.getItem('cybershield_stats')
+        if (savedStats) { const s = JSON.parse(savedStats); setStats(prev => ({ ...prev, totalPoints: s.totalPoints || 0 })) }
+        const savedWeekly = localStorage.getItem('cybershield_weekly_stats')
+        if (savedWeekly) { const w = JSON.parse(savedWeekly); setStats(prev => ({ ...prev, weeklyPoints: w.weeklyPoints || 0 })) }
       }
     }
-    const savedProgress = localStorage.getItem('cybershield_progress')
-    if (savedProgress) setProgress(JSON.parse(savedProgress))
-    const savedStats = localStorage.getItem('cybershield_stats')
-    if (savedStats) { const s = JSON.parse(savedStats); setStats(prev => ({ ...prev, totalPoints: s.totalPoints || 0 })) }
-    const savedWeekly = localStorage.getItem('cybershield_weekly_stats')
-    if (savedWeekly) { const w = JSON.parse(savedWeekly); setStats(prev => ({ ...prev, weeklyPoints: w.weeklyPoints || 0 })) }
+
+    loadFromFirestore()
   }, [])
 
   const handleLogout = () => {
