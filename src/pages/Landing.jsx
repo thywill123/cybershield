@@ -131,25 +131,26 @@ export default function Landing() {
     <div className="min-h-screen text-white overflow-x-hidden relative">
       <LandingCanvas />
 
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 px-6 py-4 flex items-center justify-between" style={{ ...navStyle, zIndex: 50 }}>
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="CyberShield" className="w-9 h-9" />
-          <span className="font-bold text-lg" style={gradText}>CyberShield</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/login')}
-            className="text-gray-300 hover:text-white text-sm transition px-4 py-2 rounded-lg"
-            style={ghostBtn}>
-            Sign In
-          </button>
-          <button onClick={() => navigate('/login')}
-            className="text-white text-sm font-semibold px-5 py-2 rounded-lg transition"
-            style={tealGrad}>
-            Get Started Free
-          </button>
-        </div>
-      </nav>
+     {/* Navbar */}
+<nav className="fixed top-0 left-0 right-0 px-4 py-3 flex items-center justify-between" style={{ ...navStyle, zIndex: 50 }}>
+  <div className="flex items-center gap-2">
+    <img src="/logo.png" alt="CyberShield" className="w-8 h-8 flex-shrink-0" />
+    <span className="font-bold text-base md:text-lg" style={gradText}>CyberShield</span>
+  </div>
+  <div className="flex items-center gap-2">
+    <button onClick={() => navigate('/login')}
+      className="text-gray-300 hover:text-white text-xs md:text-sm transition px-3 py-2 rounded-lg"
+      style={ghostBtn}>
+      Sign In
+    </button>
+    <button onClick={() => navigate('/login')}
+      className="text-white text-xs md:text-sm font-semibold px-3 md:px-5 py-2 rounded-lg transition whitespace-nowrap"
+      style={tealGrad}>
+      <span className="hidden sm:inline">Get Started Free</span>
+      <span className="sm:hidden">Get Started</span>
+    </button>
+  </div>
+</nav>
 
       {/* Hero */}
       <section className="pt-36 pb-24 px-6 text-center relative" style={{ zIndex: 10 }}>
