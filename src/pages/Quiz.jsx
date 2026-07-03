@@ -94,6 +94,7 @@ export default function Quiz() {
   const [answers, setAnswers] = useState([])
   const [error, setError] = useState('')
   const [attemptCount, setAttemptCount] = useState(0)
+  const [retrying, setRetrying] = useState(false)
 
   // ✅ Session timeout — 30 minutes of inactivity
   useSessionTimeout()
