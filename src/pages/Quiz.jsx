@@ -105,15 +105,11 @@ export default function Quiz() {
     const seed = Date.now()
     const currentDate = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
-    try {
-      const response = await fetch('/api/generate-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6', max_tokens: 1500,
-          messages: [{
-            role: 'user',
-            content: `You are a cybersecurity quiz generator. Today is ${currentDate}. Generate exactly 5 multiple choice quiz questions STRICTLY about: ${moduleInfo.topic}.
+    const requestBody = JSON.stringify({
+      model: 'claude-sonnet-4-6', max_tokens: 1500,
+      messages: [{
+        role: 'user',
+        content: `You are a cybersecurity quiz generator. Today is ${currentDate}. Generate exactly 5 multiple choice quiz questions STRICTLY about: ${moduleInfo.topic}.
 
 STRICT RULES:
 1. ${moduleInfo.forbidden}
@@ -137,12 +133,29 @@ Return ONLY a valid JSON array with no extra text:
 
 Set "isEmergingThreat": true for questions based on the emerging threats listed above.
 The "correct" field is the index (0-3) of the correct answer.`
-          }]
-        })
+      }]
+    })
+
+    const attemptFetch = async () => {
+      const response = await fetch('/api/generate-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody
       })
       const data = await response.json()
       const text = data.content?.[0]?.text || ''
-      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim())
+      return JSON.parse(text.replace(/```json|```/g, '').trim())
+    }
+
+    try {
+      let parsed
+      try {
+        parsed = await attemptFetch()
+      } catch (firstErr) {
+        // First attempt failed — silently retry once (handles cold start)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        parsed = await attemptFetch()
+      }
       setQuestions(parsed); setStarted(true)
     } catch (err) { setError('Failed to generate questions. Please check your API key and try again.') }
     setLoading(false)
@@ -253,7 +266,7 @@ The "correct" field is the index (0-3) of the correct answer.`
         {loading && (
           <div className="rounded-2xl p-8 text-center" style={cardStyle}>
             <Loader className="w-10 h-10 text-blue-400 animate-spin mx-auto mb-4" />
-            <p className="text-white font-medium">Claude AI is generating your questions...</p>
+            <p className="text-white font-medium">{retrying ? 'Waking up server, retrying...' : 'Claude AI is generating your questions...'}</p>
             <p className="text-gray-400 text-sm mt-1">Including emerging real-world threats for <span className="text-blue-400">{moduleName}</span></p>
           </div>
         )}

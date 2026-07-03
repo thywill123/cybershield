@@ -216,12 +216,10 @@ export default function AIChat() {
     setLoading(true)
     setSessionCount(c => c + 1)
 
-    try {
+    const attemptChat = async () => {
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 1000,
@@ -230,7 +228,18 @@ export default function AIChat() {
         })
       })
       const data = await response.json()
-      const reply = data.content?.[0]?.text || 'Sorry, I could not get a response. Please try again.'
+      return data.content?.[0]?.text || 'Sorry, I could not get a response. Please try again.'
+    }
+
+    try {
+      let reply
+      try {
+        reply = await attemptChat()
+      } catch (firstErr) {
+        // First attempt failed — silently retry once (handles cold start)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        reply = await attemptChat()
+      }
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (error) {
       setMessages(prev => [...prev, {
