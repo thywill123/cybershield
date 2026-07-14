@@ -79,6 +79,51 @@ const scenarioContexts = [
   'Set all scenarios involving a university or educational institution.',
 ]
 
+// Offline fallback questions — used automatically if AI generation fails or
+// times out, so the quiz never dead-ends on an error screen (e.g. during a
+// live demo with unreliable network/API conditions).
+const FALLBACK_QUESTIONS = {
+  'Phishing Awareness': [
+    { question: 'You receive an email that looks like it is from your IT department asking you to "verify" your login by clicking a link. What should you do first?', options: ['Click the link immediately since it looks official', 'Check the sender\'s actual email address and hover over the link before doing anything', 'Reply with your username and password', 'Forward it to a coworker to ask if it is real'], correct: 1, explanation: 'Always verify the sender address and link destination before clicking — spoofed emails often look identical to real ones.', isEmergingThreat: false },
+    { question: 'A colleague forwards you a QR code in a Slack message, saying it leads to the new HR benefits portal. What is the safest action?', options: ['Scan it right away to save time', 'Ignore it completely and never check', 'Verify the request through a known HR contact or the official company portal before scanning', 'Scan it but only on your phone, not your laptop'], correct: 2, explanation: 'QR code phishing ("quishing") hides malicious links behind a scan — always verify through a trusted channel first.', isEmergingThreat: true },
+    { question: 'You get a voicemail that sounds exactly like your CEO, urgently asking you to purchase gift cards for a "client emergency." What should raise suspicion?', options: ['Nothing, the voice sounds real so it must be legitimate', 'The urgency and unusual request combined with an AI-cloned voice are classic red flags', 'CEOs never call employees directly', 'Gift cards are a normal business expense'], correct: 1, explanation: 'AI voice-cloning is now used in phishing scams; unusual urgency plus an out-of-process request (gift cards) should always be verified independently.', isEmergingThreat: true },
+    { question: 'An email claims your Microsoft 365 account will be suspended in 1 hour unless you log in via a provided link. What is the best response?', options: ['Log in immediately through the link to prevent suspension', 'Go directly to portal.office.com by typing it yourself instead of using the link', 'Ignore it and delete the account', 'Reply asking for more time'], correct: 1, explanation: 'Urgency plus a login link is a hallmark of cloud-account phishing — always navigate to services directly rather than through email links.', isEmergingThreat: true },
+    { question: 'You notice a link in an email displays "www.paypal.com" but hovering over it shows a completely different URL. What does this indicate?', options: ['A normal formatting quirk', 'A likely phishing attempt using a masked/spoofed link', 'The email client is broken', 'Nothing to worry about'], correct: 1, explanation: 'Mismatched display text and actual URL is one of the most reliable signs of a phishing link.', isEmergingThreat: false },
+    { question: 'Your bank sends a text with a link to "confirm a suspicious transaction." You did not initiate any transaction. What should you do?', options: ['Click the link to check details', 'Call your bank directly using the number on your card or official website, not the one in the text', 'Reply STOP to the message', 'Ignore it — banks never contact customers'], correct: 1, explanation: 'Smishing (SMS phishing) often impersonates banks; always verify through a known, independently-sourced contact channel.', isEmergingThreat: false },
+  ],
+  'Social Engineering': [
+    { question: 'Someone in a delivery uniform asks you to hold the secure office door open because their hands are full. What is the safest response?', options: ['Hold the door — they look legitimate', 'Politely ask them to check in at reception/security instead', 'Ignore them completely', 'Ask for their ID but let them in anyway'], correct: 1, explanation: 'This is "tailgating" — a common social engineering tactic. Legitimate visitors should always check in through proper channels.', isEmergingThreat: false },
+    { question: 'You get a Microsoft Teams message from someone claiming to be IT support asking you to install a "remote access tool" to fix an issue you never reported.', options: ['Install it right away since it is IT', 'Verify through a separate, known channel (e.g. calling the IT helpdesk directly) before taking any action', 'Ignore all IT messages from now on', 'Ask a coworker to install it instead'], correct: 1, explanation: 'Attackers increasingly impersonate IT helpdesk staff over Teams/Slack to gain remote access — always verify independently.', isEmergingThreat: true },
+    { question: 'A video call "from the CEO" asks you to urgently wire funds to a new vendor account, and the video looks and sounds real.', options: ['Process the wire immediately since it is the CEO', 'Verify the request through an established, separate process (e.g. a callback to a known number) before acting', 'Ask a coworker on the call to confirm', 'Assume it is fine because video calls cannot be faked'], correct: 1, explanation: 'Deepfake video/audio impersonation of executives ("CEO fraud") is a growing threat — financial requests should always go through verified out-of-band confirmation.', isEmergingThreat: true },
+    { question: 'You receive a WhatsApp message from an unknown number claiming to be a new manager, asking for confidential project files.', options: ['Send the files since they claim to be a manager', 'Verify their identity through official company channels before sharing anything', 'Ask them to prove it by sending a selfie', 'Block them without reporting'], correct: 1, explanation: 'Messaging-app impersonation is a rising social engineering vector; confidential data should only be shared after identity is verified through official channels.', isEmergingThreat: true },
+    { question: 'A caller claims to be from your company\'s helpdesk and asks for your password to "fix an urgent issue." What is the correct action?', options: ['Give the password since it is urgent', 'Never share passwords — legitimate IT will never ask for them; report the call', 'Give a fake password to test them', 'Hang up without reporting'], correct: 1, explanation: 'No legitimate IT department ever needs your actual password — this is a classic pretexting attack.', isEmergingThreat: false },
+    { question: 'You receive a message about an amazing job offer with a very high salary, asking you to pay a small "processing fee" upfront.', options: ['Pay the fee since the offer looks great', 'Recognize this as a common recruitment scam and avoid sending any payment or personal data', 'Share your bank details for the "payroll setup"', 'Forward the offer to friends to apply too'], correct: 1, explanation: 'Fake job offer scams use social engineering and urgency to extract fees or personal data — legitimate employers never charge candidates.', isEmergingThreat: true },
+  ],
+  'Password Security': [
+    { question: 'You want to protect an important work account. Which approach provides the strongest protection?', options: ['A memorable word plus your birth year', 'A unique, long passphrase managed by a password manager, plus two-factor authentication', 'The same strong password reused across all accounts', 'A password written on a sticky note at your desk'], correct: 1, explanation: 'Unique passwords per account plus 2FA dramatically reduce risk even if one account is compromised.', isEmergingThreat: false },
+    { question: 'You get a text message asking you to confirm a login code you never requested. What is likely happening?', options: ['A harmless system glitch', 'An attacker may already have your password and is trying to bypass SMS-based 2FA (SIM swapping-style attack)', 'Your phone carrier is testing the network', 'Nothing — you can ignore it safely'], correct: 1, explanation: 'Unrequested 2FA codes often mean someone already has your password and is trying to complete login — change your password immediately.', isEmergingThreat: true },
+    { question: 'Why are authenticator apps generally considered safer than SMS codes for two-factor authentication?', options: ['They are exactly the same in terms of security', 'SMS can be intercepted via SIM swapping, while authenticator apps are tied to the device itself', 'Authenticator apps never expire', 'SMS codes are faster to receive'], correct: 1, explanation: 'SIM swapping attacks can redirect SMS codes to an attacker\'s phone; app-based or hardware-based 2FA avoids this risk.', isEmergingThreat: true },
+    { question: 'A "password spraying" attack works by:', options: ['Trying many passwords against one account very quickly', 'Trying one or a few common passwords across many different accounts to avoid lockouts', 'Guessing passwords using the user\'s pet name', 'Sending phishing emails to reset passwords'], correct: 1, explanation: 'Password spraying uses common passwords across many accounts, staying under lockout thresholds — unique, strong passwords defeat it.', isEmergingThreat: true },
+    { question: 'You discover a website you use was part of a data breach. What should you do?', options: ['Nothing, since the site will handle it', 'Change your password on that site, and on any other site where you reused it', 'Only worry if you get an email about it', 'Delete your account and forget about it'], correct: 1, explanation: 'Breached credentials are often reused in "credential stuffing" attacks against other accounts — reset the password everywhere it was reused.', isEmergingThreat: false },
+    { question: 'What is the main benefit of using a password manager?', options: ['It lets you use the same password everywhere safely', 'It generates and stores unique, strong passwords for every account so you do not have to remember them', 'It removes the need for two-factor authentication', 'It is only useful for work accounts'], correct: 1, explanation: 'Password managers make unique, complex passwords practical for every account, which is the single biggest defense against credential-based attacks.', isEmergingThreat: false },
+  ],
+  'Malware & Ransomware': [
+    { question: 'You download a "free" version of paid software from an unofficial website. What is the main risk?', options: ['It may run slightly slower', 'It may be bundled with info-stealing malware or spyware', 'There is no risk if your antivirus is up to date', 'It will only affect that one file'], correct: 1, explanation: 'Info-stealing malware is frequently hidden inside cracked or "free" software downloads from unofficial sources.', isEmergingThreat: true },
+    { question: 'A hospital\'s systems are suddenly locked with a message demanding payment to restore access. This is an example of:', options: ['A software update', 'A ransomware attack, increasingly offered as "ransomware-as-a-service" targeting critical sectors like healthcare', 'A normal firewall block', 'A password reset requirement'], correct: 1, explanation: 'Ransomware-as-a-service (RaaS) has made it easier for attackers to target hospitals and schools, where uptime pressure increases the odds of payment.', isEmergingThreat: true },
+    { question: 'You install a browser extension for a productivity tool, and afterward your browser homepage keeps changing and ads appear everywhere.', options: ['This is expected behavior for extensions', 'The extension may be malicious and should be removed immediately, followed by a security scan', 'Restarting the browser will fix it permanently', 'This only affects browsing speed, not security'], correct: 1, explanation: 'Malicious browser extensions can hijack settings and steal credentials — remove suspicious extensions and scan the system.', isEmergingThreat: true },
+    { question: 'What makes "fileless malware" particularly hard to detect with traditional antivirus?', options: ['It only targets mobile phones', 'It operates in memory rather than writing files to disk, leaving little for signature-based scanners to find', 'It is not actually a real threat', 'It only works when the computer is offline'], correct: 1, explanation: 'Fileless malware runs in memory and abuses legitimate system tools, making it much harder for traditional file-scanning antivirus to catch.', isEmergingThreat: true },
+    { question: 'What is the single most effective way to reduce the impact of a ransomware attack?', options: ['Paying the ransom quickly', 'Maintaining regular, tested, offline backups of important data', 'Disabling antivirus to avoid conflicts', 'Keeping all devices permanently connected to the network'], correct: 1, explanation: 'Reliable offline backups mean you can restore systems without paying attackers, drastically reducing ransomware\'s leverage.', isEmergingThreat: false },
+    { question: 'You plug in a USB drive found in the office parking lot to see who it belongs to. What is the risk?', options: ['No risk, as long as you delete anything suspicious after', 'It could automatically install malware on your machine ("baiting" attack)', 'USB drives cannot carry malware', 'Only a risk on personal computers, not work ones'], correct: 1, explanation: 'Unknown USB drives are a classic malware delivery and social engineering ("baiting") technique — never plug in unverified devices.', isEmergingThreat: false },
+  ],
+}
+
+function getFallbackQuestions(moduleName, attemptCount) {
+  const pool = FALLBACK_QUESTIONS[moduleName] || FALLBACK_QUESTIONS['Phishing Awareness']
+  const offset = attemptCount % pool.length
+  const rotated = [...pool.slice(offset), ...pool.slice(0, offset)]
+  return rotated.slice(0, 5)
+}
+
 export default function Quiz() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -94,7 +139,6 @@ export default function Quiz() {
   const [answers, setAnswers] = useState([])
   const [error, setError] = useState('')
   const [attemptCount, setAttemptCount] = useState(0)
-  const [retrying, setRetrying] = useState(false)
 
   // ✅ Session timeout — 30 minutes of inactivity
   useSessionTimeout()
@@ -107,7 +151,10 @@ export default function Quiz() {
     const currentDate = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
     const requestBody = JSON.stringify({
-      model: 'claude-sonnet-4-6', max_tokens: 1500,
+      // Haiku 4.5 is several times faster than Sonnet-class models and is
+      // plenty capable for structured MCQ generation — this keeps generation
+      // well under our timeout instead of taking 30+ seconds.
+      model: 'claude-haiku-4-5', max_tokens: 2048,
       messages: [{
         role: 'user',
         content: `You are a cybersecurity quiz generator. Today is ${currentDate}. Generate exactly 5 multiple choice quiz questions STRICTLY about: ${moduleInfo.topic}.
@@ -120,14 +167,15 @@ STRICT RULES:
 5. Use session ID ${seed} to ensure unique questions never seen before.
 6. Each question must be a realistic workplace scenario for a non-technical employee.
 7. IMPORTANT — Include at least 2 questions based on these EMERGING REAL-WORLD THREATS from ${currentDate}: ${moduleInfo.threats}
+8. Keep each "explanation" to ONE short sentence (max 20 words) so the response stays compact.
 
-Return ONLY a valid JSON array with no extra text:
+Return ONLY a valid JSON array with no extra text, no markdown fences, nothing before or after it:
 [
   {
     "question": "Realistic scenario question strictly about ${moduleName}?",
     "options": ["Option A","Option B","Option C","Option D"],
     "correct": 0,
-    "explanation": "Why this answer is correct in the context of ${moduleName}.",
+    "explanation": "Short reason the answer is correct.",
     "isEmergingThreat": false
   }
 ]
@@ -137,28 +185,49 @@ The "correct" field is the index (0-3) of the correct answer.`
       }]
     })
 
+    // Extracts a JSON array even if the model adds stray text/fences around it.
+    const extractJsonArray = (text) => {
+      const start = text.indexOf('[')
+      const end = text.lastIndexOf(']')
+      if (start === -1 || end === -1 || end < start) throw new Error('No JSON array found in response')
+      return JSON.parse(text.slice(start, end + 1))
+    }
+
     const attemptFetch = async () => {
-      const response = await fetch('/api/generate-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: requestBody
-      })
-      const data = await response.json()
-      const text = data.content?.[0]?.text || ''
-      return JSON.parse(text.replace(/```json|```/g, '').trim())
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000) // hard cap: never hang past 15s
+      try {
+        const response = await fetch('/api/generate-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: requestBody,
+          signal: controller.signal,
+        })
+        const data = await response.json()
+        if (!response.ok || data.error) {
+          throw new Error(data.error?.message || `API error (status ${response.status})`)
+        }
+        const text = data.content?.[0]?.text || ''
+        if (data.stop_reason === 'max_tokens') {
+          console.warn('Response was truncated at max_tokens; JSON may be incomplete.')
+        }
+        return extractJsonArray(text)
+      } finally {
+        clearTimeout(timeoutId)
+      }
     }
 
     try {
-      let parsed
-      try {
-        parsed = await attemptFetch()
-      } catch (firstErr) {
-        // First attempt failed — silently retry once (handles cold start)
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        parsed = await attemptFetch()
-      }
+      const parsed = await attemptFetch()
+      if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Empty question set')
       setQuestions(parsed); setStarted(true)
-    } catch (err) { setError('Failed to generate questions. Please check your API key and try again.') }
+    } catch (err) {
+      // AI generation failed or timed out — fall back to the offline question
+      // bank so the quiz still works seamlessly instead of showing an error.
+      console.warn('AI question generation failed, using offline fallback questions:', err)
+      const fallback = getFallbackQuestions(moduleName, attemptCount)
+      setQuestions(fallback); setStarted(true)
+    }
     setLoading(false)
   }
 
@@ -267,7 +336,7 @@ The "correct" field is the index (0-3) of the correct answer.`
         {loading && (
           <div className="rounded-2xl p-8 text-center" style={cardStyle}>
             <Loader className="w-10 h-10 text-blue-400 animate-spin mx-auto mb-4" />
-            <p className="text-white font-medium">{retrying ? 'Waking up server, retrying...' : 'Claude AI is generating your questions...'}</p>
+            <p className="text-white font-medium">Claude AI is generating your questions...</p>
             <p className="text-gray-400 text-sm mt-1">Including emerging real-world threats for <span className="text-blue-400">{moduleName}</span></p>
           </div>
         )}
