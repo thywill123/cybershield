@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
+import { glassPillPrimary } from '../styles/glass'
 
 const isMobile = () => window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
@@ -123,14 +124,26 @@ export default function Login() {
   }
 
   const inputClass = "bg-transparent text-white w-full outline-none text-sm placeholder-gray-500"
-  const inputWrap = { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(80,140,255,0.35)' }
-  const btnStyle = { background: loading ? 'rgba(80,100,200,0.5)' : 'linear-gradient(135deg,#1a3fc4,#2d6fff,#7c3aed)', boxShadow: '0 0 30px rgba(80,100,255,0.5)' }
+  const inputWrap = { background: 'rgba(255,255,255,0.055)', border: '1px solid rgba(120,160,255,0.28)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }
+  const btnStyle = loading
+    ? { background: 'rgba(80,100,200,0.5)', borderRadius: '999px' }
+    : glassPillPrimary('45,110,255')
 
   // Mobile card — NO blur, solid background for performance
-  // Desktop card — glassmorphism blur
+  // Desktop card — liquid-glass: blur + saturate + specular top edge
   const cardStyle = mobile
     ? { background: '#0a1628', border: '1px solid rgba(80,140,255,0.25)', boxShadow: '0 4px 30px rgba(0,0,0,0.8)' }
-    : { background: 'rgba(6,15,40,0.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(80,140,255,0.2)', boxShadow: '0 0 60px rgba(40,80,255,0.15),0 20px 60px rgba(0,0,0,0.6)' }
+    : {
+        background: 'rgba(10,20,48,0.68)',
+        backdropFilter: 'blur(26px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(26px) saturate(180%)',
+        border: '1px solid rgba(120,160,255,0.22)',
+        boxShadow: `
+          inset 0 1px 0 rgba(255,255,255,0.16),
+          0 0 60px rgba(40,80,255,0.15),
+          0 20px 60px rgba(0,0,0,0.6)
+        `,
+      }
 
   const RuleItem = ({ passed, text }) => (
     <div className="flex items-center gap-2">
@@ -177,11 +190,11 @@ export default function Login() {
               <h2 className="text-xl font-semibold text-white mb-6">Sign in to your account</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div><label className="text-blue-300 text-sm mb-1 block">Email</label>
-                  <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
+                  <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
                 <div><label className="text-blue-300 text-sm mb-1 block">Password</label>
-                  <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className={inputClass} /></div></div>
+                  <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className={inputClass} /></div></div>
                 <div className="text-right"><button type="button" onClick={() => { setMode('forgot'); setError('') }} className="text-blue-400 text-sm">Forgot password?</button></div>
-                <button type="submit" disabled={loading} className="w-full text-white font-semibold py-3 rounded-lg" style={btnStyle}>{loading ? 'Signing in...' : 'Sign In →'}</button>
+                <button type="submit" disabled={loading} className="glass-sweep w-full text-white font-semibold py-3 rounded-full transition" style={btnStyle}>{loading ? 'Signing in...' : 'Sign In →'}</button>
               </form>
               <p className="text-center text-gray-500 text-sm mt-6">Don't have an account?{' '}<button onClick={() => { setMode('signup'); setError('') }} className="text-blue-400">Sign up</button></p>
             </>
@@ -192,15 +205,15 @@ export default function Login() {
               <h2 className="text-xl font-semibold text-white mb-6">Create your account</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div><label className="text-blue-300 text-sm mb-1 block">Full Name</label>
-                  <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><User className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="text" placeholder="John Doe" value={name} onChange={e => setName(e.target.value)} required className={inputClass} /></div></div>
+                  <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><User className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="text" placeholder="John Doe" value={name} onChange={e => setName(e.target.value)} required className={inputClass} /></div></div>
                 <div><label className="text-blue-300 text-sm mb-1 block">Institution</label>
-                  <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Building className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="text" placeholder="Your organization" value={institution} onChange={e => setInstitution(e.target.value)} required className={inputClass} /></div></div>
+                  <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Building className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="text" placeholder="Your organization" value={institution} onChange={e => setInstitution(e.target.value)} required className={inputClass} /></div></div>
                 <div><label className="text-blue-300 text-sm mb-1 block">Email</label>
-                  <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
+                  <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
                 <div><label className="text-blue-300 text-sm mb-1 block">Password</label>
-                  <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="password" placeholder="Create a strong password" value={password} onChange={e => { setPassword(e.target.value); setShowPasswordRules(true) }} onFocus={() => setShowPasswordRules(true)} required className={inputClass} /></div>
+                  <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="password" placeholder="Create a strong password" value={password} onChange={e => { setPassword(e.target.value); setShowPasswordRules(true) }} onFocus={() => setShowPasswordRules(true)} required className={inputClass} /></div>
                   {showPasswordRules && (
-                    <div className="mt-2 p-3 rounded-lg space-y-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(80,140,255,0.15)' }}>
+                    <div className="mt-2 p-3 rounded-xl space-y-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(80,140,255,0.15)' }}>
                       <RuleItem passed={pwdValidation.minLength} text="At least 8 characters" />
                       <RuleItem passed={pwdValidation.hasUpper} text="At least one uppercase letter (A-Z)" />
                       <RuleItem passed={pwdValidation.hasNumber} text="At least one number (0-9)" />
@@ -208,7 +221,7 @@ export default function Login() {
                     </div>
                   )}
                 </div>
-                <button type="submit" disabled={loading} className="w-full text-white font-semibold py-3 rounded-lg" style={btnStyle}>{loading ? 'Creating account...' : 'Create Account →'}</button>
+                <button type="submit" disabled={loading} className="glass-sweep w-full text-white font-semibold py-3 rounded-full transition" style={btnStyle}>{loading ? 'Creating account...' : 'Create Account →'}</button>
               </form>
               <p className="text-center text-gray-500 text-sm mt-6">Already have an account?{' '}<button onClick={() => { setMode('login'); setError('') }} className="text-blue-400">Sign in</button></p>
             </>
@@ -222,8 +235,8 @@ export default function Login() {
                   <p className="text-gray-400 text-sm mb-6">Enter your registered email and we will send you a reset link.</p>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div><label className="text-blue-300 text-sm mb-1 block">Email</label>
-                      <div className="flex items-center rounded-lg px-3 py-2.5" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
-                    <button type="submit" disabled={loading} className="w-full text-white font-semibold py-3 rounded-lg" style={btnStyle}>{loading ? 'Sending...' : 'Send Reset Link →'}</button>
+                      <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
+                    <button type="submit" disabled={loading} className="glass-sweep w-full text-white font-semibold py-3 rounded-full transition" style={btnStyle}>{loading ? 'Sending...' : 'Send Reset Link →'}</button>
                   </form>
                 </>
               ) : (
