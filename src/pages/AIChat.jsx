@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Send, Bot, User, Loader } from 'lucide-react'
 import useSessionTimeout from '../hooks/useSessionTimeout'
+import { glassCard, glassNav, glassPillPrimary } from '../styles/glass'
 
 const systemPrompt = `You are CyberShield AI, a friendly cybersecurity awareness assistant.
 
@@ -217,34 +218,44 @@ export default function AIChat() {
     setSessionCount(c => c + 1)
 
     const attemptChat = async () => {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: updatedMessages.map(m => ({ role: m.role, content: m.content }))
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000) // hard cap: never hang past 15s
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            // Haiku 4.5 is several times faster than Sonnet-class models —
+            // plenty capable for this kind of conversational Q&A, and keeps
+            // replies feeling snappy instead of taking 20-30+ seconds.
+            model: 'claude-haiku-4-5',
+            max_tokens: 1000,
+            system: systemPrompt,
+            messages: updatedMessages.map(m => ({ role: m.role, content: m.content }))
+          }),
+          signal: controller.signal,
         })
-      })
-      const data = await response.json()
-      return data.content?.[0]?.text || 'Sorry, I could not get a response. Please try again.'
+        const data = await response.json()
+        if (!response.ok || data.error) {
+          throw new Error(data.error?.message || `API error (status ${response.status})`)
+        }
+        return data.content?.[0]?.text || 'Sorry, I could not get a response. Please try again.'
+      } finally {
+        clearTimeout(timeoutId)
+      }
     }
 
     try {
-      let reply
-      try {
-        reply = await attemptChat()
-      } catch (firstErr) {
-        // First attempt failed — silently retry once (handles cold start)
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        reply = await attemptChat()
-      }
+      const reply = await attemptChat()
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (error) {
+      console.warn('AI chat request failed:', error)
+      const timedOut = error.name === 'AbortError'
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Connection error. Please check your internet connection and try again.'
+        content: timedOut
+          ? 'That took longer than expected. Please try sending your question again.'
+          : 'Connection error. Please check your internet connection and try again.'
       }])
     }
     setLoading(false)
@@ -279,16 +290,18 @@ export default function AIChat() {
     setSessionCount(0)
   }
 
-  const navStyle = {
-    background: 'rgba(4, 10, 28, 0.92)',
-    backdropFilter: 'blur(16px)',
-    borderBottom: '1px solid rgba(30, 70, 180, 0.2)',
+  const navStyle = glassNav
+  const cardStyle = glassCard
+  const userBubbleStyle = {
+    ...glassPillPrimary('35,100,235'),
+    borderRadius: '18px',
+    borderTopRightRadius: '4px',
+    color: 'white',
   }
-
-  const cardStyle = {
-    background: 'rgba(8, 18, 45, 0.80)',
-    backdropFilter: 'blur(14px)',
-    border: '1px solid rgba(40, 90, 200, 0.22)',
+  const avatarGlow = {
+    background: 'linear-gradient(180deg, rgba(70,120,255,0.9), rgba(124,58,237,0.85))',
+    border: '1px solid rgba(255,255,255,0.25)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 0 14px rgba(70,120,255,0.35)',
   }
 
   return (
@@ -328,20 +341,20 @@ export default function AIChat() {
             <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
-                  style={{ background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)', boxShadow: '0 0 12px rgba(37,99,235,0.4)' }}>
+                  style={avatarGlow}>
                   <Bot className="w-4 h-4 text-white" />
                 </div>
               )}
               <div
                 className={`max-w-lg px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}
                 style={msg.role === 'user'
-                  ? { background: 'linear-gradient(135deg, #1d4ed8, #2563eb)', boxShadow: '0 0 15px rgba(37,99,235,0.3)', color: 'white' }
+                  ? userBubbleStyle
                   : { ...cardStyle, color: '#d1d5db' }}
                 dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }}
               />
               {msg.role === 'user' && (
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
-                  style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+                  style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.18)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)' }}>
                   <User className="w-4 h-4 text-white" />
                 </div>
               )}
@@ -351,7 +364,7 @@ export default function AIChat() {
           {loading && (
             <div className="flex gap-3 justify-start">
               <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)', boxShadow: '0 0 12px rgba(37,99,235,0.4)' }}>
+                style={avatarGlow}>
                 <Bot className="w-4 h-4 text-white" />
               </div>
               <div className="px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-2" style={cardStyle}>
@@ -368,8 +381,10 @@ export default function AIChat() {
           <div className="grid grid-cols-2 gap-2 mb-4">
             {suggestions.map((s, i) => (
               <button key={i} onClick={() => setInput(s)}
-                className="text-gray-300 text-xs px-3 py-2 rounded-lg text-left transition hover:border-blue-400"
-                style={cardStyle}>
+                className="text-gray-300 text-xs px-3 py-2 rounded-xl text-left transition-all duration-300"
+                style={cardStyle}
+                onMouseEnter={e => Object.assign(e.currentTarget.style, { ...cardStyle, border: '1px solid rgba(120,160,255,0.4)', transform: 'translateY(-2px)' })}
+                onMouseLeave={e => Object.assign(e.currentTarget.style, { ...cardStyle, transform: 'translateY(0)' })}>
                 {s}
               </button>
             ))}
@@ -389,8 +404,8 @@ export default function AIChat() {
           <button
             onClick={sendMessage}
             disabled={loading || !input.trim()}
-            className="p-2 rounded-xl transition disabled:opacity-40 hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #1d4ed8, #7c3aed)', boxShadow: '0 0 15px rgba(37,99,235,0.35)' }}>
+            className="glass-sweep p-2.5 rounded-full transition-all disabled:opacity-40"
+            style={glassPillPrimary('45,110,255')}>
             <Send className="w-4 h-4 text-white" />
           </button>
         </div>

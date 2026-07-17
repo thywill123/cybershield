@@ -1,3 +1,6 @@
+// Ensure Vercel doesn't kill the function before Anthropic responds.
+export const config = { maxDuration: 30 }
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -14,6 +17,7 @@ export default async function handler(req, res) {
     const data = await response.json()
     res.status(response.status).json(data)
   } catch (err) {
-    res.status(500).json({ error: 'Failed to contact Anthropic API' })
+    console.error('chat proxy error:', err)
+    res.status(500).json({ error: { message: err.message || 'Failed to contact Anthropic API' } })
   }
 }
