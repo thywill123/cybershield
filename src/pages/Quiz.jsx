@@ -124,6 +124,24 @@ function getFallbackQuestions(moduleName, attemptCount) {
   return rotated.slice(0, 5)
 }
 
+// Shuffles each question's answer options (and remaps the correct index to match)
+// so the correct answer's position is never predictable — regardless of whether
+// the question came from the AI or the offline fallback bank.
+function shuffleQuestionOptions(questions) {
+  return questions.map(q => {
+    const order = q.options.map((_, i) => i)
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[order[i], order[j]] = [order[j], order[i]]
+    }
+    return {
+      ...q,
+      options: order.map(i => q.options[i]),
+      correct: order.indexOf(q.correct),
+    }
+  })
+}
+
 export default function Quiz() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -220,13 +238,13 @@ The "correct" field is the index (0-3) of the correct answer.`
     try {
       const parsed = await attemptFetch()
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Empty question set')
-      setQuestions(parsed); setStarted(true)
+   setQuestions(shuffleQuestionOptions(parsed)); setStarted(true)
     } catch (err) {
       // AI generation failed or timed out — fall back to the offline question
       // bank so the quiz still works seamlessly instead of showing an error.
       console.warn('AI question generation failed, using offline fallback questions:', err)
       const fallback = getFallbackQuestions(moduleName, attemptCount)
-      setQuestions(fallback); setStarted(true)
+     setQuestions(shuffleQuestionOptions(fallback)); setStarted(true)
     }
     setLoading(false)
   }
