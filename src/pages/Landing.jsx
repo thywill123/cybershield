@@ -140,7 +140,7 @@ export default function Landing() {
   </div>
   <div className="flex items-center gap-2">
     <button onClick={() => navigate('/login')}
-      className="text-gray-200 hover:text-white text-xs md:text-sm transition px-4 py-2 rounded-full"
+      className="glass-ghost text-gray-200 hover:text-white text-xs md:text-sm transition px-4 py-2 rounded-full"
       style={ghostBtn}>
       Sign In
     </button>
@@ -185,7 +185,7 @@ export default function Landing() {
             <ChevronRight className="w-5 h-5" />
           </button>
           <button onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })}
-            className="text-white font-semibold px-8 py-4 rounded-full transition text-lg"
+            className="glass-ghost text-white font-semibold px-8 py-4 rounded-full transition text-lg"
             style={ghostBtn}>
             See How It Works
           </button>

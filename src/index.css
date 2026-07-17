@@ -9,6 +9,29 @@
 .glass-sweep {
   position: relative;
   overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+}
+.glass-sweep:hover {
+  transform: translateY(-3px) scale(1.035);
+  filter: brightness(1.14) saturate(1.15);
+}
+.glass-sweep:active {
+  transform: translateY(-1px) scale(1.01);
+  filter: brightness(1.05);
+}
+
+/* Ghost/secondary glass buttons — same lift feel, no color sweep since
+   there's no color wash to sweep across. */
+.glass-ghost {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+}
+.glass-ghost:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.25);
+}
+.glass-ghost:active {
+  transform: translateY(0);
+  filter: brightness(1.1);
 }
 .glass-sweep::after {
   content: '';
@@ -26,4 +49,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .glass-sweep:hover::after { animation: none; opacity: 0; }
+  .glass-sweep, .glass-ghost { transition: none; }
+  .glass-sweep:hover, .glass-ghost:hover { transform: none; }
 }
