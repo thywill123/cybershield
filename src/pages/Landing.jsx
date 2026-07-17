@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { Brain, Trophy, ChevronRight, CheckCircle, Eye, Lock, Zap, Users, AlertTriangle, ArrowRight, Shield } from 'lucide-react'
+import { glassCard, glassCardHover, glassNav, glassPillPrimary, glassPillGhost, glassChip } from '../styles/glass'
 
 // Full animated canvas — same style as Login page
 function LandingCanvas() {
@@ -98,11 +99,11 @@ export default function Landing() {
     return () => clearInterval(interval)
   }, [])
 
-  const navStyle = { background: 'rgba(4,10,28,0.90)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(30,70,180,0.2)' }
-  const cardStyle = { background: 'rgba(8,18,45,0.80)', backdropFilter: 'blur(12px)', border: '1px solid rgba(40,90,200,0.2)', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }
+  const navStyle = glassNav
+  const cardStyle = glassCard
   const gradText = { background: 'linear-gradient(135deg,#60a5fa,#a78bfa,#38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }
-  const tealGrad = { background: 'linear-gradient(135deg,#0d9488,#0f766e)', boxShadow: '0 0 30px rgba(13,148,136,0.4)' }
-  const ghostBtn = { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(80,140,255,0.3)' }
+  const tealGrad = glassPillPrimary('20,180,165')
+  const ghostBtn = glassPillGhost
 
   const features = [
     { icon: <Brain className="w-6 h-6 text-blue-400" />, title: 'Generative AI Training', desc: 'Claude AI creates fresh realistic cybersecurity scenarios every session — no two quizzes are ever the same.', color: 'rgba(37,99,235,0.15)', border: 'rgba(37,99,235,0.3)' },
@@ -139,12 +140,12 @@ export default function Landing() {
   </div>
   <div className="flex items-center gap-2">
     <button onClick={() => navigate('/login')}
-      className="text-gray-300 hover:text-white text-xs md:text-sm transition px-3 py-2 rounded-lg"
+      className="text-gray-200 hover:text-white text-xs md:text-sm transition px-4 py-2 rounded-full"
       style={ghostBtn}>
       Sign In
     </button>
     <button onClick={() => navigate('/login')}
-      className="text-white text-xs md:text-sm font-semibold px-3 md:px-5 py-2 rounded-lg transition whitespace-nowrap"
+      className="glass-sweep text-white text-xs md:text-sm font-semibold px-4 md:px-6 py-2 rounded-full transition whitespace-nowrap"
       style={tealGrad}>
       <span className="hidden sm:inline">Get Started Free</span>
       <span className="sm:hidden">Get Started</span>
@@ -155,7 +156,7 @@ export default function Landing() {
       {/* Hero */}
       <section className="pt-36 pb-24 px-6 text-center relative" style={{ zIndex: 10 }}>
         <div className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-full mb-8"
-          style={{ background: 'rgba(120,20,20,0.5)', border: '1px solid rgba(200,60,60,0.4)', color: '#fca5a5' }}>
+          style={{ ...glassChip, background: 'rgba(120,20,20,0.45)', border: '1px solid rgba(255,120,120,0.3)', color: '#fca5a5' }}>
           <AlertTriangle className="w-4 h-4" />
           <span><strong>{count}%</strong> of cyber breaches involve human error</span>
         </div>
@@ -178,13 +179,13 @@ export default function Landing() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
           <button onClick={() => navigate('/login')}
-            className="text-white font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-2 transition text-lg"
+            className="glass-sweep text-white font-bold px-8 py-4 rounded-full flex items-center justify-center gap-2 transition text-lg"
             style={tealGrad}>
             Start Training Free
             <ChevronRight className="w-5 h-5" />
           </button>
           <button onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })}
-            className="text-white font-semibold px-8 py-4 rounded-xl transition text-lg"
+            className="text-white font-semibold px-8 py-4 rounded-full transition text-lg"
             style={ghostBtn}>
             See How It Works
           </button>
@@ -193,7 +194,7 @@ export default function Landing() {
         <div className="flex flex-wrap justify-center gap-3">
           {['🎣 Phishing Attacks', '🎭 Social Engineering', '🔐 Password Breaches', '🦠 Malware & Ransomware'].map((t, i) => (
             <div key={i} className="px-4 py-2 rounded-full text-sm text-gray-300"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(80,140,255,0.2)' }}>
+              style={glassChip}>
               {t}
             </div>
           ))}
@@ -201,7 +202,7 @@ export default function Landing() {
       </section>
 
       {/* Stats */}
-      <section className="py-12 relative" style={{ zIndex: 10, background: 'rgba(4,10,28,0.85)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(30,70,180,0.15)', borderBottom: '1px solid rgba(30,70,180,0.15)' }}>
+      <section className="py-12 relative" style={{ zIndex: 10, background: 'rgba(14,20,44,0.72)', backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)', borderTop: '1px solid rgba(255,255,255,0.08)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
             { value: '4', label: 'Training Modules', color: '#2dd4bf' },
@@ -228,12 +229,12 @@ export default function Landing() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {features.map((f, i) => (
-            <div key={i} className="rounded-2xl p-6 transition-all"
-              style={{ background: f.color, border: `1px solid ${f.border}`, backdropFilter: 'blur(8px)' }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+            <div key={i} className="rounded-2xl p-6 transition-all duration-300"
+              style={{ ...glassCard, background: `linear-gradient(160deg, ${f.color}, rgba(18,26,54,0.55))` }}
+              onMouseEnter={e => Object.assign(e.currentTarget.style, glassCardHover)}
+              onMouseLeave={e => Object.assign(e.currentTarget.style, { ...glassCard, background: `linear-gradient(160deg, ${f.color}, rgba(18,26,54,0.55))` })}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                style={{ background: 'rgba(255,255,255,0.07)' }}>
+                style={{ background: 'rgba(255,255,255,0.08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15)' }}>
                 {f.icon}
               </div>
               <h3 className="font-bold text-lg mb-2 text-white">{f.title}</h3>
@@ -244,7 +245,7 @@ export default function Landing() {
       </section>
 
       {/* Modules */}
-      <section className="py-24 relative" style={{ zIndex: 10, background: 'rgba(4,10,28,0.7)', backdropFilter: 'blur(8px)', borderTop: '1px solid rgba(30,70,180,0.1)', borderBottom: '1px solid rgba(30,70,180,0.1)' }}>
+      <section className="py-24 relative" style={{ zIndex: 10, background: 'rgba(14,20,44,0.6)', backdropFilter: 'blur(18px) saturate(160%)', WebkitBackdropFilter: 'blur(18px) saturate(160%)', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">What you will learn</h2>
@@ -255,7 +256,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {modules.map((mod, i) => (
               <div key={i} onClick={() => navigate('/login')}
-                className="rounded-2xl p-6 flex gap-4 items-start cursor-pointer transition-all"
+                className="rounded-2xl p-6 flex gap-4 items-start cursor-pointer transition-all duration-300"
                 style={{ ...cardStyle, border: `1px solid ${mod.border}` }}
                 onMouseEnter={e => { e.currentTarget.style.border = `1px solid ${mod.hover}`; e.currentTarget.style.transform = 'translateY(-2px)' }}
                 onMouseLeave={e => { e.currentTarget.style.border = `1px solid ${mod.border}`; e.currentTarget.style.transform = 'translateY(0)' }}>
@@ -292,7 +293,7 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="mx-4 md:mx-8 mb-16 rounded-3xl py-20 px-6 text-center relative" style={{ zIndex: 10, background: 'linear-gradient(135deg, rgba(13,148,136,0.2), rgba(8,18,45,0.9), rgba(124,58,237,0.15))', border: '1px solid rgba(13,148,136,0.3)', backdropFilter: 'blur(16px)' }}>
+      <section className="mx-4 md:mx-8 mb-16 rounded-3xl py-20 px-6 text-center relative" style={{ zIndex: 10, background: 'linear-gradient(135deg, rgba(13,148,136,0.22), rgba(18,26,54,0.75), rgba(124,58,237,0.18))', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16), 0 12px 48px rgba(0,0,0,0.4)' }}>
         <div className="text-5xl mb-6">🛡️</div>
         <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
           Your team's cybersecurity journey
@@ -302,7 +303,7 @@ export default function Landing() {
           Join CyberShield and turn your biggest security vulnerability into your strongest defense.
         </p>
         <button onClick={() => navigate('/login')}
-          className="text-white font-bold px-10 py-4 rounded-xl transition text-lg inline-flex items-center gap-2 mb-8"
+          className="glass-sweep text-white font-bold px-10 py-4 rounded-full transition text-lg inline-flex items-center gap-2 mb-8"
           style={tealGrad}>
           Get Started — It's Free
           <ChevronRight className="w-5 h-5" />

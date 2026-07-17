@@ -1,1 +1,29 @@
 @import "tailwindcss";
+
+/* Liquid-glass light sweep: a soft highlight that glides across a pill
+   button on hover, simulating light moving across a glass surface. */
+@keyframes glassSweep {
+  0% { transform: translateX(-120%) skewX(-15deg); }
+  100% { transform: translateX(220%) skewX(-15deg); }
+}
+.glass-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.glass-sweep::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  pointer-events: none;
+}
+.glass-sweep:hover::after {
+  opacity: 1;
+  animation: glassSweep 0.9s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-sweep:hover::after { animation: none; opacity: 0; }
+}

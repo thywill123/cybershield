@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import useSessionTimeout from '../hooks/useSessionTimeout'
+import { glassCard, glassCardHover, glassNav, glassChip } from '../styles/glass'
 
 function SubtleCanvas() {
   const canvasRef = useRef(null)
@@ -150,8 +151,8 @@ export default function Dashboard() {
   const firstName = user.name.charAt(0).toUpperCase() + user.name.slice(1)
   const modulesDone = `${Object.values(progress).filter(v => v > 0).length}/4`
 
-  const cardStyle = { background: 'rgba(8,18,45,0.80)', backdropFilter: 'blur(12px)', border: '1px solid rgba(40,90,200,0.2)', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }
-  const navStyle = { background: 'rgba(4,10,28,0.90)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(30,70,180,0.2)' }
+  const cardStyle = glassCard
+  const navStyle = glassNav
 
   return (
     <div className="min-h-screen text-white relative">
@@ -174,7 +175,7 @@ export default function Dashboard() {
       <div className="max-w-5xl mx-auto px-6 py-8 relative" style={{ zIndex: 10 }}>
 
         {weeklyReset && (
-          <div className="rounded-xl p-4 mb-6 flex items-center gap-3" style={{ background: 'rgba(37,99,235,0.15)', border: '1px solid rgba(37,99,235,0.3)' }}>
+          <div className="rounded-2xl p-4 mb-6 flex items-center gap-3" style={{ ...glassCard, background: 'rgba(37,99,235,0.18)', border: '1px solid rgba(120,170,255,0.3)' }}>
             <span className="text-2xl">🔄</span>
             <div>
               <p className="text-white font-medium text-sm">Weekly progress has been reset!</p>
@@ -197,7 +198,9 @@ export default function Dashboard() {
             { label: 'Total Points', value: stats.totalPoints || 0, icon: <Star className="w-5 h-5" />, color: 'text-purple-400', sub: 'All time' },
             { label: 'Day Streak', value: '1 🔥', icon: <Flame className="w-5 h-5" />, color: 'text-orange-400', sub: `${daysUntilMonday()}d to reset` },
           ].map((stat, i) => (
-            <div key={i} className="rounded-xl p-4" style={cardStyle}>
+            <div key={i} className="rounded-2xl p-4 transition-all duration-300" style={cardStyle}
+              onMouseEnter={e => Object.assign(e.currentTarget.style, { ...cardStyle, ...glassCardHover })}
+              onMouseLeave={e => Object.assign(e.currentTarget.style, cardStyle)}>
               <div className={`${stat.color} mb-2`}>{stat.icon}</div>
               <div className="text-2xl font-bold text-white">{stat.value}</div>
               <div className="text-gray-400 text-sm">{stat.label}</div>
@@ -206,7 +209,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="rounded-xl p-3 mb-8 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="rounded-2xl p-3 mb-8 flex items-center justify-between" style={glassChip}>
           <span className="text-gray-400 text-xs">🔄 Weekly progress resets every Monday at midnight</span>
           <span className="text-blue-400 text-xs font-medium">{daysUntilMonday()} day{daysUntilMonday() !== 1 ? 's' : ''} until next reset</span>
         </div>
@@ -219,10 +222,10 @@ export default function Dashboard() {
           <div className="space-y-3">
             {modules.map((mod, i) => (
               <div key={i} onClick={() => navigate(`/module/${i}`)}
-                className="rounded-xl p-4 flex items-center justify-between cursor-pointer transition-all"
+                className="rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all duration-300"
                 style={cardStyle}
-                onMouseEnter={e => e.currentTarget.style.border = '1px solid rgba(80,140,255,0.4)'}
-                onMouseLeave={e => e.currentTarget.style.border = '1px solid rgba(40,90,200,0.2)'}>
+                onMouseEnter={e => Object.assign(e.currentTarget.style, { ...cardStyle, ...glassCardHover })}
+                onMouseLeave={e => Object.assign(e.currentTarget.style, cardStyle)}>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-white">{mod.title}</span>
@@ -246,8 +249,15 @@ export default function Dashboard() {
           </div>
           <div className="grid grid-cols-4 gap-4">
             {weeklyBadges.map((badge, i) => (
-              <div key={i} className="rounded-xl p-4 text-center transition-all"
-                style={{ ...cardStyle, border: badge.earned ? '1px solid rgba(250,200,0,0.4)' : '1px solid rgba(40,90,200,0.15)', opacity: badge.earned ? 1 : 0.35, boxShadow: badge.earned ? '0 0 20px rgba(250,200,0,0.08),0 4px 20px rgba(0,0,0,0.4)' : '0 4px 20px rgba(0,0,0,0.3)' }}>
+              <div key={i} className="rounded-2xl p-4 text-center transition-all duration-300"
+                style={{
+                  ...cardStyle,
+                  border: badge.earned ? '1px solid rgba(250,210,80,0.45)' : '1px solid rgba(255,255,255,0.08)',
+                  opacity: badge.earned ? 1 : 0.35,
+                  boxShadow: badge.earned
+                    ? 'inset 0 1px 0 rgba(255,235,180,0.35), 0 0 24px rgba(250,200,0,0.12), 0 8px 28px rgba(0,0,0,0.4)'
+                    : 'inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 20px rgba(0,0,0,0.3)',
+                }}>
                 <div className="text-3xl mb-2">{badge.icon}</div>
                 <div className="text-xs font-medium text-white leading-tight">{badge.title}</div>
                 <div className="text-gray-500 text-xs mt-1 leading-tight">{badge.desc}</div>
