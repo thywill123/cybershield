@@ -7,6 +7,7 @@ import Quiz from './pages/Quiz'
 import AIChat from './pages/AIChat'
 import Admin from './pages/Admin'
 import AdminLogin from './pages/AdminLogin'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
@@ -14,11 +15,21 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/module/:id" element={<TrainingModule />} />
-        <Route path="/quiz" element={<Quiz />} />
-        <Route path="/ai-chat" element={<AIChat />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/dashboard" element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
+        <Route path="/module/:id" element={
+          <ProtectedRoute><TrainingModule /></ProtectedRoute>
+        } />
+        <Route path="/quiz" element={
+          <ProtectedRoute><Quiz /></ProtectedRoute>
+        } />
+        <Route path="/ai-chat" element={
+          <ProtectedRoute><AIChat /></ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute><Admin /></ProtectedRoute>
+        } />
         <Route path="/admin-login" element={<AdminLogin />} />
       </Routes>
     </Router>
