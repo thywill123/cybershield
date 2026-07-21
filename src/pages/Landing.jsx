@@ -77,7 +77,7 @@ export default function Landing() {
   const navigate = useNavigate()
   const [count, setCount] = useState(0)
   const [typedText, setTypedText] = useState('')
-  const fullText = 'Is your team ready for a cyberattack?'
+  const fullText = "Hackers don't break in. Someone lets them in."
 
   useEffect(() => {
     let i = 0
