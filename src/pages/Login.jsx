@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Lock, Mail, User, Building, CheckCircle, XCircle } from 'lucide-react'
+import { Lock, Mail, User, Building, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
@@ -67,11 +67,16 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPasswordRules, setShowPasswordRules] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [signupSuccess, setSignupSuccess] = useState(false)
   const [mobile, setMobile] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => { setMobile(isMobile()) }, [])
+
+  // Reset visibility toggle whenever we switch forms, so it never carries
+  // over "revealed" into a fresh password field.
+  useEffect(() => { setShowPassword(false) }, [mode])
 
   const pwdValidation = validatePassword(password)
 
@@ -152,6 +157,32 @@ export default function Login() {
     </div>
   )
 
+  // Password field with a show/hide eye toggle, sharing the same glass
+  // input styling as every other field.
+  const PasswordField = ({ value, onChange, placeholder, onFocus }) => (
+    <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}>
+      <Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" />
+      <input
+        type={showPassword ? 'text' : 'password'}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onFocus={onFocus}
+        required
+        className={inputClass}
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(v => !v)}
+        className="text-gray-400 hover:text-blue-400 transition-colors ml-2 shrink-0"
+        aria-label={showPassword ? 'Hide password' : 'Show password'}
+        tabIndex={-1}
+      >
+        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  )
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
       style={mobile ? { background: 'linear-gradient(135deg, #040d20 0%, #081830 50%, #030a18 100%)' } : {}}>
@@ -192,7 +223,8 @@ export default function Login() {
                 <div><label className="text-blue-300 text-sm mb-1 block">Email</label>
                   <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
                 <div><label className="text-blue-300 text-sm mb-1 block">Password</label>
-                  <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className={inputClass} /></div></div>
+                  <PasswordField value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
+                </div>
                 <div className="text-right"><button type="button" onClick={() => { setMode('forgot'); setError('') }} className="text-blue-400 text-sm">Forgot password?</button></div>
                 <button type="submit" disabled={loading} className="glass-sweep w-full text-white font-semibold py-3 rounded-full transition" style={btnStyle}>{loading ? 'Signing in...' : 'Sign In →'}</button>
               </form>
@@ -211,7 +243,12 @@ export default function Login() {
                 <div><label className="text-blue-300 text-sm mb-1 block">Email</label>
                   <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
                 <div><label className="text-blue-300 text-sm mb-1 block">Password</label>
-                  <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="password" placeholder="Create a strong password" value={password} onChange={e => { setPassword(e.target.value); setShowPasswordRules(true) }} onFocus={() => setShowPasswordRules(true)} required className={inputClass} /></div>
+                  <PasswordField
+                    value={password}
+                    onChange={e => { setPassword(e.target.value); setShowPasswordRules(true) }}
+                    onFocus={() => setShowPasswordRules(true)}
+                    placeholder="Create a strong password"
+                  />
                   {showPasswordRules && (
                     <div className="mt-2 p-3 rounded-xl space-y-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(80,140,255,0.15)' }}>
                       <RuleItem passed={pwdValidation.minLength} text="At least 8 characters" />
