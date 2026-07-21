@@ -168,7 +168,7 @@ export default function Landing() {
 
         <p className="text-xl font-semibold mb-6"
           style={{ background: 'linear-gradient(135deg,#2dd4bf,#0d9488)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          CyberShield trains them — with AI.
+          CyberShield trains your people to never be that someone.
         </p>
 
         <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
