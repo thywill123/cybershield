@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, Brain, Trophy, BookOpen } from 'lucide-react'
 import useSessionTimeout from '../hooks/useSessionTimeout'
+import { glassCard, glassCardHover, glassNav, glassPillPrimary } from '../styles/glass'
 
 const moduleData = {
   0: {
@@ -124,8 +125,22 @@ export default function TrainingModule() {
     setTipsChecked(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])
   }
 
-  const cardStyle = { background: 'rgba(8,18,45,0.80)', backdropFilter: 'blur(12px)', border: '1px solid rgba(40,90,200,0.2)', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }
-  const navStyle = { background: 'rgba(4,10,28,0.90)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(30,70,180,0.2)' }
+  const cardStyle = glassCard
+  const navStyle = glassNav
+  const tipCheckedStyle = {
+    background: 'rgba(20,100,50,0.35)',
+    backdropFilter: 'blur(14px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(160%)',
+    border: '1px solid rgba(80,220,120,0.4)',
+    boxShadow: 'inset 0 1px 0 rgba(150,255,180,0.25)',
+  }
+  const tipUncheckedStyle = {
+    background: 'rgba(255,255,255,0.045)',
+    backdropFilter: 'blur(14px) saturate(160%)',
+    WebkitBackdropFilter: 'blur(14px) saturate(160%)',
+    border: '1px solid rgba(120,160,255,0.18)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+  }
 
   return (
     <div className="min-h-screen text-white relative">
@@ -144,14 +159,15 @@ export default function TrainingModule() {
       <div className="max-w-3xl mx-auto px-6 py-8 relative" style={{ zIndex: 10 }}>
 
         <div className="flex items-center gap-4 mb-8">
-          <div className={`${mod.color} text-4xl w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg`}>{mod.icon}</div>
+          <div className={`${mod.color} text-4xl w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg`}
+            style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 8px 24px rgba(0,0,0,0.4)' }}>{mod.icon}</div>
           <div>
             <h1 className="text-2xl font-bold text-white">{mod.title}</h1>
             <p className="text-blue-300 mt-1 opacity-70">Training Module</p>
           </div>
         </div>
 
-        <div className="rounded-xl p-6 mb-6" style={cardStyle}>
+        <div className="rounded-2xl p-6 mb-6 transition-all duration-300" style={cardStyle}>
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-5 h-5 text-blue-400" />
             <span className="font-semibold text-blue-400">Overview</span>
@@ -160,21 +176,21 @@ export default function TrainingModule() {
         </div>
 
         {mod.sections.map((section, i) => (
-          <div key={i} className="rounded-xl p-6 mb-4" style={cardStyle}>
+          <div key={i} className="rounded-2xl p-6 mb-4 transition-all duration-300" style={cardStyle}
+            onMouseEnter={e => Object.assign(e.currentTarget.style, { ...cardStyle, ...glassCardHover })}
+            onMouseLeave={e => Object.assign(e.currentTarget.style, cardStyle)}>
             <h3 className="font-semibold text-lg mb-3 text-white">{section.heading}</h3>
             <p className="text-gray-300 leading-relaxed">{section.content}</p>
           </div>
         ))}
 
-        <div className="rounded-xl p-6 mb-6" style={cardStyle}>
+        <div className="rounded-2xl p-6 mb-6 transition-all duration-300" style={cardStyle}>
           <h3 className="font-semibold text-lg mb-4 text-white">Key Tips — Check each one as you review</h3>
           <div className="space-y-3">
             {mod.tips.map((tip, i) => (
               <div key={i} onClick={() => toggleTip(i)}
-                className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition"
-                style={tipsChecked.includes(i)
-                  ? { background: 'rgba(20,80,40,0.6)', border: '1px solid rgba(60,180,80,0.4)' }
-                  : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(40,90,200,0.2)' }}>
+                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300"
+                style={tipsChecked.includes(i) ? tipCheckedStyle : tipUncheckedStyle}>
                 <CheckCircle className={`w-5 h-5 flex-shrink-0 ${tipsChecked.includes(i) ? 'text-green-400' : 'text-gray-600'}`} />
                 <span className={`text-sm ${tipsChecked.includes(i) ? 'text-green-300' : 'text-gray-300'}`}>{tip}</span>
               </div>
@@ -184,13 +200,13 @@ export default function TrainingModule() {
 
         <div className="grid grid-cols-2 gap-4">
           <button onClick={() => navigate('/ai-chat')}
-            className="text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition hover:opacity-90 active:scale-95"
-            style={{ background: 'linear-gradient(135deg,#6d28d9,#7c3aed)', boxShadow: '0 0 20px rgba(109,40,217,0.4)' }}>
+            className="glass-sweep text-white font-semibold py-3 rounded-full flex items-center justify-center gap-2 transition"
+            style={glassPillPrimary('124,58,237')}>
             <Brain className="w-5 h-5" />Practice with AI
           </button>
           <button onClick={() => navigate(`/quiz?module=${encodeURIComponent(mod.title)}`)}
-            className="text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition hover:opacity-90 active:scale-95"
-            style={{ background: 'linear-gradient(135deg,#1d4ed8,#2563eb)', boxShadow: '0 0 20px rgba(37,99,235,0.4)' }}>
+            className="glass-sweep text-white font-semibold py-3 rounded-full flex items-center justify-center gap-2 transition"
+            style={glassPillPrimary('37,99,235')}>
             <Trophy className="w-5 h-5" />Take the Quiz
           </button>
         </div>
