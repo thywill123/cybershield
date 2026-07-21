@@ -12,10 +12,10 @@ function LandingCanvas() {
     let animationId
     const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
     resize(); window.addEventListener('resize', resize)
-    const nodes = Array.from({ length: 50 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, vx: (Math.random() - 0.5) * 0.25, vy: (Math.random() - 0.5) * 0.25, pulse: Math.random() * Math.PI * 2, size: Math.random() * 2.5 + 1.5 }))
-    const signals = Array.from({ length: 30 }, () => ({ progress: Math.random(), speed: 0.003 + Math.random() * 0.005, nodeA: Math.floor(Math.random() * nodes.length), nodeB: Math.floor(Math.random() * nodes.length), color: Math.random() > 0.5 ? '100,200,255' : '180,100,255', size: Math.random() * 3 + 2 }))
-    const particles = Array.from({ length: 100 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: Math.random() * 2 + 0.5, dx: (Math.random() - 0.5) * 0.4, dy: (Math.random() - 0.5) * 0.4, alpha: Math.random() * 0.4 + 0.1, pulse: Math.random() * Math.PI * 2, color: Math.random() > 0.7 ? '200,100,255' : Math.random() > 0.5 ? '100,220,255' : '50,150,255' }))
-    const ripples = []; const ri = setInterval(() => ripples.push({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: 0, alpha: 0.5, color: Math.random() > 0.5 ? '80,160,255' : '160,80,255' }), 1200)
+    const nodes = Array.from({ length: 50 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, vx: (Math.random() - 0.5) * 0.175, vy: (Math.random() - 0.5) * 0.175, pulse: Math.random() * Math.PI * 2, size: Math.random() * 2.5 + 1.5 }))
+    const signals = Array.from({ length: 30 }, () => ({ progress: Math.random(), speed: 0.0021 + Math.random() * 0.0035, nodeA: Math.floor(Math.random() * nodes.length), nodeB: Math.floor(Math.random() * nodes.length), color: Math.random() > 0.5 ? '100,200,255' : '180,100,255', size: Math.random() * 3 + 2 }))
+    const particles = Array.from({ length: 100 }, () => ({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: Math.random() * 2 + 0.5, dx: (Math.random() - 0.5) * 0.28, dy: (Math.random() - 0.5) * 0.28, alpha: Math.random() * 0.4 + 0.1, pulse: Math.random() * Math.PI * 2, color: Math.random() > 0.7 ? '200,100,255' : Math.random() > 0.5 ? '100,220,255' : '50,150,255' }))
+    const ripples = []; const ri = setInterval(() => ripples.push({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, r: 0, alpha: 0.5, color: Math.random() > 0.5 ? '80,160,255' : '160,80,255' }), 1715)
     const hexSize = 50; const hexGrid = []
     for (let hx = 0; hx < window.innerWidth + hexSize * 2; hx += hexSize * 1.75)
       for (let hy = 0; hy < window.innerHeight + hexSize * 2; hy += hexSize * 1.5)
@@ -26,8 +26,8 @@ function LandingCanvas() {
       const bg = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width)
       bg.addColorStop(0, '#040d20'); bg.addColorStop(1, '#010610')
       ctx.fillStyle = bg; ctx.fillRect(0, 0, canvas.width, canvas.height)
-      hexGrid.forEach(h => { h.pulse += 0.006; ctx.strokeStyle = `rgba(30,100,220,${h.alpha + 0.02 * Math.sin(h.pulse)})`; ctx.lineWidth = 0.4; drawHex(h.x, h.y, hexSize * 0.88); ctx.stroke() })
-      nodes.forEach(n => { n.x += n.vx; n.y += n.vy; n.pulse += 0.02; if (n.x < 0 || n.x > canvas.width) n.vx *= -1; if (n.y < 0 || n.y > canvas.height) n.vy *= -1 })
+      hexGrid.forEach(h => { h.pulse += 0.0042; ctx.strokeStyle = `rgba(30,100,220,${h.alpha + 0.02 * Math.sin(h.pulse)})`; ctx.lineWidth = 0.4; drawHex(h.x, h.y, hexSize * 0.88); ctx.stroke() })
+      nodes.forEach(n => { n.x += n.vx; n.y += n.vy; n.pulse += 0.014; if (n.x < 0 || n.x > canvas.width) n.vx *= -1; if (n.y < 0 || n.y > canvas.height) n.vy *= -1 })
       nodes.forEach((a, i) => nodes.forEach((b, j) => {
         if (j <= i) return
         const d = Math.hypot(a.x - b.x, a.y - b.y)
@@ -53,14 +53,14 @@ function LandingCanvas() {
         ctx.beginPath(); ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2); ctx.fillStyle = `rgba(150,210,255,${0.7 + 0.3 * Math.sin(n.pulse)})`; ctx.fill()
       })
       particles.forEach(p => {
-        p.x += p.dx; p.y += p.dy; p.pulse += 0.04
+        p.x += p.dx; p.y += p.dy; p.pulse += 0.028
         if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0
         if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0
         ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(${p.color},${p.alpha * (0.5 + 0.5 * Math.sin(p.pulse))})`; ctx.fill()
       })
       for (let i = ripples.length - 1; i >= 0; i--) {
-        const rp = ripples[i]; rp.r += 1.2; rp.alpha -= 0.006
+        const rp = ripples[i]; rp.r += 0.84; rp.alpha -= 0.0042
         if (rp.alpha <= 0) { ripples.splice(i, 1); continue }
         ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2)
         ctx.strokeStyle = `rgba(${rp.color},${rp.alpha})`; ctx.lineWidth = 1.2; ctx.stroke()
@@ -168,7 +168,7 @@ export default function Landing() {
 
         <p className="text-xl font-semibold mb-6"
           style={{ background: 'linear-gradient(135deg,#2dd4bf,#0d9488)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          CyberShield trains you to never be that someone.
+          CyberShield trains your people to never be that someone.
         </p>
 
         <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
