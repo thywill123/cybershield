@@ -57,6 +57,47 @@ const isPasswordValid = (pwd) => {
   return v.minLength && v.hasUpper && v.hasNumber && v.hasSymbol
 }
 
+// Moved to module scope (not defined inside Login) so React treats it as a
+// stable component across re-renders instead of remounting it — and losing
+// input focus — on every keystroke.
+function RuleItem({ passed, text }) {
+  return (
+    <div className="flex items-center gap-2">
+      {passed ? <CheckCircle className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> : <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
+      <span className={`text-xs ${passed ? 'text-green-400' : 'text-gray-400'}`}>{text}</span>
+    </div>
+  )
+}
+
+// Same reasoning as RuleItem above — this MUST live outside Login, since it
+// wraps the actual <input>. Defined inline, it would remount (and steal
+// focus from) the password field on every single keystroke.
+function PasswordField({ value, onChange, placeholder, onFocus, showPassword, onToggle, inputWrap, inputClass }) {
+  return (
+    <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}>
+      <Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" />
+      <input
+        type={showPassword ? 'text' : 'password'}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onFocus={onFocus}
+        required
+        className={inputClass}
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="text-gray-400 hover:text-blue-400 transition-colors ml-2 shrink-0"
+        aria-label={showPassword ? 'Hide password' : 'Show password'}
+        tabIndex={-1}
+      >
+        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  )
+}
+
 export default function Login() {
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
@@ -150,39 +191,6 @@ export default function Login() {
         `,
       }
 
-  const RuleItem = ({ passed, text }) => (
-    <div className="flex items-center gap-2">
-      {passed ? <CheckCircle className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> : <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
-      <span className={`text-xs ${passed ? 'text-green-400' : 'text-gray-400'}`}>{text}</span>
-    </div>
-  )
-
-  // Password field with a show/hide eye toggle, sharing the same glass
-  // input styling as every other field.
-  const PasswordField = ({ value, onChange, placeholder, onFocus }) => (
-    <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}>
-      <Lock className="text-blue-400 w-4 h-4 mr-2 shrink-0" />
-      <input
-        type={showPassword ? 'text' : 'password'}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        onFocus={onFocus}
-        required
-        className={inputClass}
-      />
-      <button
-        type="button"
-        onClick={() => setShowPassword(v => !v)}
-        className="text-gray-400 hover:text-blue-400 transition-colors ml-2 shrink-0"
-        aria-label={showPassword ? 'Hide password' : 'Show password'}
-        tabIndex={-1}
-      >
-        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-      </button>
-    </div>
-  )
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
       style={mobile ? { background: 'linear-gradient(135deg, #040d20 0%, #081830 50%, #030a18 100%)' } : {}}>
@@ -223,7 +231,15 @@ export default function Login() {
                 <div><label className="text-blue-300 text-sm mb-1 block">Email</label>
                   <div className="flex items-center rounded-xl px-3 py-2.5 transition-colors" style={inputWrap}><Mail className="text-blue-400 w-4 h-4 mr-2 shrink-0" /><input type="email" placeholder="you@institution.com" value={email} onChange={e => setEmail(e.target.value)} required className={inputClass} /></div></div>
                 <div><label className="text-blue-300 text-sm mb-1 block">Password</label>
-                  <PasswordField value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
+                  <PasswordField
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    showPassword={showPassword}
+                    onToggle={() => setShowPassword(v => !v)}
+                    inputWrap={inputWrap}
+                    inputClass={inputClass}
+                  />
                 </div>
                 <div className="text-right"><button type="button" onClick={() => { setMode('forgot'); setError('') }} className="text-blue-400 text-sm">Forgot password?</button></div>
                 <button type="submit" disabled={loading} className="glass-sweep w-full text-white font-semibold py-3 rounded-full transition" style={btnStyle}>{loading ? 'Signing in...' : 'Sign In →'}</button>
@@ -248,6 +264,10 @@ export default function Login() {
                     onChange={e => { setPassword(e.target.value); setShowPasswordRules(true) }}
                     onFocus={() => setShowPasswordRules(true)}
                     placeholder="Create a strong password"
+                    showPassword={showPassword}
+                    onToggle={() => setShowPassword(v => !v)}
+                    inputWrap={inputWrap}
+                    inputClass={inputClass}
                   />
                   {showPasswordRules && (
                     <div className="mt-2 p-3 rounded-xl space-y-1.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(80,140,255,0.15)' }}>
